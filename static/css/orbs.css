@@ -1,0 +1,101 @@
+/* ORBS Custom Styles
+*/
+
+/* ---- Navbar ---- */
+.navbar-orbs {
+    background-color: #1a3a5c;
+}
+.navbar-orbs .navbar-brand {
+    color: #f0a500;
+    font-weight: bold;
+    font-size: 1.4rem;
+}
+
+.navbar-orbs .nav-link {
+    color: #ffffff;
+}
+
+.navbar-orbs .nav-link:hover {
+    color: #f0a500;
+}
+
+/* ---- Buttons ---- */
+.btn-orbs {
+    background-color: #f0a500;
+    color: #1a3a5c;
+    font-weight: bold;
+    border: none;
+}
+.btn-orbs:hover {
+    background-color: #d4920a;
+    color: #ffffff;
+}
+
+/* ---- Cards ---- */
+.card-orbs {
+    border-top: 3px solid #f0a500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* ---- Hero Section ---- */
+.hero-orbs {
+    background-color: #1a3a5c;
+    color: #ffffff;
+    padding: 60px 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.hero-orbs h1 {
+    color: #ffffff;
+}
+
+.hero-orbs p {
+    color: #cccccc;
+}
+
+/* ---- Footer ---- */
+.footer-orbs {
+    background-color: #1a3a5c;
+    color: #ffffff;
+    padding: 15px 0;
+    margin-top: 50px;
+}
+
+/* ---- Page Headings ---- */
+.page-heading {
+    color: #1a3a5c;
+    border-bottom: 2px solid #f0a500;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* ---- Badges ---- */
+.badge-orbs {
+    background-color: #f0a500;
+    color: #1a3a5c;
+    font-weight: bold;
+}
+
+/* ---- Tables ---- */
+.table-orbs thead {
+    background-color: #1a3a5c;
+    color: #ffffff;
+}
+
+/* ---- Form Labels ---- */
+.form-label {
+    font-weight: 500;
+    color: #1a3a5c;
+}
+
+/* ---- Links ---- */
+a.orbs-link {
+    color: #f0a500;
+    text-decoration: none;
+}
+
+a.orbs-link:hover {
+    color: #d4920a;
+    text-decoration: underline;
+}

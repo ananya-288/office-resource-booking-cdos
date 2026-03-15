@@ -117,6 +117,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS =[BASE_DIR / 'static'] #specifying the dir for static files
+STATIC_ROOT= BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -126,3 +128,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CSRF_TRUSTED_ORIGINS = [
     'https://ae69ebf484dd499fa320a1b2fa3d7a62.vfs.cloud9.us-east-1.amazonaws.com',
 ]
+
+# Email configuration 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'orbs@officebooking.com'

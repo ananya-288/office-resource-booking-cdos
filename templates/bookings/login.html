@@ -1,0 +1,39 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card card-orbs p-4">
+            <h2 class="text-center mb-4" style="color: #1a3a5c;">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </h2>
+            <form method="POST">
+                {% csrf_token %}
+                <!-- Username -->
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control"
+                           placeholder="Enter username" required>
+                </div>
+                <!-- Password -->
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control"
+                           placeholder="Enter password" required>
+                </div>
+
+                <button type="submit" class="btn btn-orbs w-100">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            <div class="text-center mt-3">
+                <p>Do not have an account?
+                    <a href="{% url 'register' %}" style="color: #f0a500;">Register here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

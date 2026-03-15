@@ -1,0 +1,90 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Register {% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card card-orbs p-4">
+            <h2 class="text-center mb-4" style="color: #1a3a5c;">
+                <i class="fas fa-user-plus"></i> Create Account
+            </h2>
+            <form method="POST">
+                {% csrf_token %}
+                <!-- Username -->
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control"
+                           placeholder="Enter username" required>
+                    {% if form.username.errors %}
+                        <div class="text-danger">{{ form.username.errors }}</div>
+                    {% endif %}
+                </div>
+                <!-- Email -->
+                <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control"
+                           placeholder="Enter email" required>
+                    {% if form.email.errors %}
+                        <div class="text-danger">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- First Name -->
+                <div class="mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control"
+                           placeholder="Enter first name" required>
+                    {% if form.first_name.errors %}
+                        <div class="text-danger">{{ form.first_name.errors }}</div>
+                    {% endif %}
+                </div>
+                <!-- Last Name -->
+                <div class="mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control"
+                           placeholder="Enter last name" required>
+                    {% if form.last_name.errors %}
+                        <div class="text-danger">{{ form.last_name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control"
+                           placeholder="Enter password" required>
+                    {% if form.password.errors %}
+                        <div class="text-danger">{{ form.password.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-3">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" name="confirm_password" class="form-control"
+                           placeholder="Confirm password" required>
+                    {% if form.confirm_password.errors %}
+                        <div class="text-danger">{{ form.confirm_password.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Non field errors -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-orbs w-100">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <p>Already have an account? 
+                    <a href="{% url 'login_user' %}" style="color: #f0a500;">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
