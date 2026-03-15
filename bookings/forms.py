@@ -6,6 +6,9 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core import validators
 
+from .models import Resource
+
+
 
 class UserRegistrationForm(forms.Form):
     """
@@ -75,3 +78,29 @@ class UserRegistrationForm(forms.Form):
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Passwords do not match.")
         return cleaned_data
+        
+class ResourceForm(forms.ModelForm):
+        
+    """Resource form for creating and editing office resources accessible by admin"""
+    class Meta:
+        """Defines the model and fields for the resource form."""
+        model = Resource
+        fields = ['resource_name', 'resource_type', 'capacity',
+                  'location', 'description', 'is_available']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def clean_capacity(self):
+        """To validate such that capacity is a positive number"""
+        capacity = self.cleaned_data.get('capacity')
+        if capacity <= 0:
+            raise forms.ValidationError("Capacity must be greater than zero.")
+        return capacity
+
+    def clean_resource_name(self):
+        """To validate that the resource name is not too short"""
+        resource_name = self.cleaned_data.get('resource_name')
+        if len(resource_name) < 3:
+            raise forms.ValidationError("Resource name must have at least 3 characters.")
+        return resource_name    

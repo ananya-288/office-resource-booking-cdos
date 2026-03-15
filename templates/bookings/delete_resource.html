@@ -1,0 +1,33 @@
+{% extends 'bookings/base.html' %}
+{% block title %}Delete Resource{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card card-orbs p-4">
+            <h2 class="page-heading">
+                <i class="fas fa-trash"></i> Delete Resource
+            </h2>
+            <p>Are you sure you want to delete 
+                <strong>{{ resource.resource_name }}</strong>?
+            </p>
+            <p class="text-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                All bookings for this resource will also be deleted.It can't be undone..
+            </p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Yes, Delete
+                    </button>
+                    <a href="{% url 'list_resources' %}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -23,7 +23,7 @@
                 <ul class="navbar-nav me-auto">
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="{% url 'list_resources' %}">
                             <i class="fas fa-door-open"></i>Resources
                         </a>
                     </li>
@@ -34,7 +34,7 @@
                     </li>
                     {% if user.is_staff %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="{% url 'resource_create' %}">
                             <i class="fas fa-plus"></i>Add Resource
                         </a>
                     </li>
