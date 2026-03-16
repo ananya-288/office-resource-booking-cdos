@@ -135,3 +135,6 @@ CSRF_TRUSTED_ORIGINS = [
 # Email configuration 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'orbs@officebooking.com'
+
+# This redirects to the custom login page
+LOGIN_URL = '/login/'

@@ -144,12 +144,24 @@ class BookingForm(forms.ModelForm):
         return start_time
 
     def clean_end_time(self):
-        """Validates that end time is after start time."""
+        """Validates that end time is after start time and makes sure that max duartion is set to 4 hours"""
         end_time = self.cleaned_data.get('end_time')
-        start_time= self.cleaned_data.get('start_time')
-        if end_time and start_time and end_time <= start_time:
-            raise forms.ValidationError(
-                "End time must be after start time.")
+        start_time = self.cleaned_data.get('start_time')
+
+        if end_time and start_time:
+            if end_time <= start_time:
+                raise forms.ValidationError(
+                    "End time must be after start time."
+                )
+            # To calculate the duration in hours
+            duration= end_time - start_time
+            duration_hours =duration.total_seconds() / 3600
+ 
+            if duration_hours > 4:
+                raise forms.ValidationError(
+                   "Maximum booking duration is 4 hours."
+            )
+
         return end_time
 
     def clean(self):

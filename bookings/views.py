@@ -58,16 +58,20 @@ def register(request):
 
 def login_user(request):
     """
-    Authenticates user credentials and creates a session.
+    This function will handle user login. It will redirect to next page if specificed or else it goes to home.
     """
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         # Authenticate the user
-        user = authenticate(request, username=username, password=password)
+        user =authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            messages.success(request, f'Hello {user.first_name}, welcome back!')
+            messages.success(request, f'Hello {user.first_name}, welcome back')
+            # If specified redirect to next page
+            next_page = request.POST.get('next') or request.GET.get('next')
+            if next_page:
+                return redirect(next_page)
             return redirect('home')
         else:
             messages.error(request, 'Incorrect username or password. Please try again.')
@@ -296,6 +300,14 @@ def update_booking(request, pk):
     if existing_booking.start_time <= timezone.now():
         messages.error(request, 'Unable to edit a booking that is already in progress.')
         return redirect('my_bookings')
+        
+    # Prevent editing bookings within 1 hour of start time
+    time_until_start = existing_booking.start_time - timezone.now()
+    if time_until_start.total_seconds() < 3600:
+        messages.error(
+           request,
+             'Bookings cannot be edited within 1 hour of the start time.' )
+        return redirect('my_bookings')    
 
     if request.method == 'POST':
         form = BookingForm(request.POST, instance=existing_booking)
@@ -310,23 +322,34 @@ def update_booking(request, pk):
         'form': form,
         'resource': existing_booking.resource,
     })
+    
+    
 
 
 @login_required
 def cancel_my_booking(request, pk):
     """
-    The users are allowed to cancel their existing bookings and confirmation email is sent for the same.
+    The users can cancel their existing bookings and email is sent for successful cancellation.
+    The cancellation cannot be done within 1 hour of start time.
     """
     try:
-        booking_to_cancel = Booking.objects.get(pk=pk, user=request.user)
+        booking_to_cancel =Booking.objects.get(pk=pk, user=request.user)
     except Booking.DoesNotExist:
         messages.error(request, 'Booking not found.')
         return redirect('my_bookings')
-
-    if request.method == 'POST':
-        booking_to_cancel.status = 'cancelled'
+    # Prevent cancellation within 1 hour of start time
+    time_until_start = booking_to_cancel.start_time - timezone.now()
+    if time_until_start.total_seconds() < 3600:
+        messages.error(
+            request,
+            'Bookings cannot be cancelled within 1 hour of the start time.'
+        )
+        return redirect('my_bookings')
+    if request.method =='POST':
+        booking_to_cancel.status ='cancelled'
         booking_to_cancel.save()
-        # Send cancellation email 
+
+        # Send cancellation email
         send_mail(
             subject='Booking Cancellation - Office Resource Booking System',
             message=f'Hello {request.user.first_name},\n\n'
@@ -341,6 +364,30 @@ def cancel_my_booking(request, pk):
         )
         messages.success(request, 'Your booking has been cancelled.')
         return redirect('my_bookings')
+
     return render(request, 'bookings/cancel_booking.html', {
         'booking': booking_to_cancel
     })
+    
+@login_required
+def display_bookings_admin(request):
+    """
+    This method is to display all booking made by all users. Only admin can access.
+    """
+    if not request.user.is_staff:
+        messages.error(request, 'Access restricted to administrators only.')
+        return redirect('home')
+
+    # Most recent is fetched first and getting all bookings.
+    all_bookings = Booking.objects.all().order_by('-created_at')
+
+    # Filtering by status if provided
+    status_filter =request.GET.get('status', '')
+    if status_filter:
+        all_bookings =all_bookings.filter(status=status_filter)
+
+    context = {
+        'all_bookings': all_bookings,
+        'status_filter': status_filter,
+    }
+    return render(request, 'bookings/admin_bookings.html', context)

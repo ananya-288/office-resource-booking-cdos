@@ -11,6 +11,7 @@
             </h2>
             <form method="POST">
                 {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
                 <!-- Username -->
                 <div class="mb-3">
                     <label class="form-label">Username</label>
