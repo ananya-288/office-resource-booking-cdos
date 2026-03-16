@@ -1,0 +1,74 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Book Resource {% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card card-orbs p-4">
+            <h2 class="page-heading">
+                <i class="fas fa-calendar-plus"></i> Book {{resource.resource_name}}</h2>
+
+            <!-- Resource Summary -->
+            <div class="alert" style="background-color: #f0f4f8; border-left: 4px solid #f0a500;">
+                <p class="mb-1">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <strong>Location:</strong> {{resource.location}}</p>
+                <p class="mb-0">
+                    <i class="fas fa-users"></i>
+                    <strong>Capacity:</strong> {{ resource.capacity }} people
+                </p>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <!-- Start Time -->
+                <div class="mb-3">
+                    <label class="form-label">Start Time</label>
+                    <input type="datetime-local" name="start_time"
+                           class="form-control"
+                           value="{{ form.start_time.value|default:'' }}" required>
+                    {% if form.start_time.errors %}
+                        <div class="text-danger">{{ form.start_time.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- End Time -->
+                <div class="mb-3">
+                    <label class="form-label">End Time</label>
+                    <input type="datetime-local" name="end_time"
+                           class="form-control"
+                           value="{{ form.end_time.value|default:'' }}" required>
+                    {% if form.end_time.errors %}
+                        <div class="text-danger">{{ form.end_time.errors }}</div>
+                    {% endif %}
+                </div>
+                <!-- Hidden resource field -->
+                <input type="hidden" name="resource" value="{{ resource.pk }}">
+
+                <!-- Notes -->
+                <div class="mb-3">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea name="notes" class="form-control" rows="3"
+                              placeholder="Any special requirements...">{{ form.notes.value|default:'' }}</textarea>
+                </div>
+                <!-- Conflict detection non field errors -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-orbs">
+                        <i class="fas fa-calendar-check"></i> Confirm Booking
+                    </button>
+                    <a href="{% url 'list_resources' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

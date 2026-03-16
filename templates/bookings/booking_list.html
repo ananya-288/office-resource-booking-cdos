@@ -1,0 +1,114 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}My Bookings{% endblock %}
+
+{% block content %}
+<h2 class="page-heading">
+    <i class="fas fa-calendar-check"></i> My Bookings
+</h2>
+<!-- Active Bookings -->
+{% if active_bookings %}
+<h4 style="color: #1a3a5c;">
+    <i class="fas fa-circle text-success"></i> Active Currently 
+</h4>
+<div class="row mb-4">
+    {% for booking in active_bookings %}
+    <div class="col-md-6 mb-3">
+        <div class="card card-orbs h-100 border-success">
+            <div class="card-body">
+                <h5 style="color: #1a3a5c;">
+                    {{ booking.resource.resource_name}}
+                </h5>
+                <p><i class="fas fa-clock"></i>
+                    {{ booking.start_time }} — {{ booking.end_time}}
+                </p>
+                <span class="badge bg-success">Active Now</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Upcoming Bookings -->
+{% if upcoming_bookings %}
+<h4 style="color: #1a3a5c;">
+    <i class="fas fa-calendar"></i> Scheduled Bookings
+</h4>
+<div class="row mb-4">
+    {% for booking in upcoming_bookings %}
+    <div class="col-md-6 mb-3">
+        <div class="card card-orbs h-100">
+            <div class="card-body">
+                <h5 style="color: #1a3a5c;">
+                    {{booking.resource.resource_name}}
+                </h5>
+                <p><i class="fas fa-map-marker-alt"></i>
+                    {{booking.resource.location }}
+                </p>
+                <p><i class="fas fa-clock"></i>
+                    {{ booking.start_time }} — {{booking.end_time}}
+                </p>
+                {% if booking.notes %}
+                <p class="text-muted">
+                    <i class="fas fa-sticky-note"></i> {{ booking.notes}}
+                </p>
+                {% endif %}
+                <span class="badge" 
+                      style="background-color: #f0a500; color: #1a3a5c;">
+                    Confirmed
+                </span>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <a href="{% url 'update_booking' booking.pk %}"
+                   class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-edit"></i> Edit</a>
+                <a href="{% url 'cancel_my_booking' booking.pk %}"
+                   class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-times"></i> Cancel</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Past Bookings -->
+{% if past_bookings %}
+<h4 style="color: #1a3a5c;">
+    <i class="fas fa-history"></i> Booking History
+</h4>
+<div class="row mb-4">
+    {% for booking in past_bookings %}
+    <div class="col-md-6 mb-3">
+        <div class="card card-orbs h-100">
+            <div class="card-body">
+                <h5 style="color: #1a3a5c;">
+                    {{booking.resource.resource_name}}
+                </h5>
+                <p><i class="fas fa-clock"></i>
+                    {{ booking.start_time }} — {{ booking.end_time }}
+                </p>
+                {% if booking.status == 'cancelled' %}
+                <span class="badge bg-danger">Cancelled</span>
+                {% else %}
+                <span class="badge bg-secondary">Completed</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not active_bookings and not upcoming_bookings and not past_bookings %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> 
+    You have no bookings yet.
+    <a href="{% url 'list_resources' %}" style="color: #f0a500;">
+       Start browsing resources to make the first booking.
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

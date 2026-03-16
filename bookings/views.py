@@ -12,6 +12,10 @@ from django.contrib.auth.decorators import login_required
 from .models import Resource, Booking
 from .forms import UserRegistrationForm, ResourceForm
 
+from .forms import UserRegistrationForm,ResourceForm,BookingForm
+
+from django.utils import timezone
+
 
 def register(request):
     """
@@ -195,3 +199,148 @@ def resource_delete(request, pk):
         return redirect('list_resources')
 
     return render(request, 'bookings/delete_resource.html', {'resource': resource})
+
+
+@login_required
+def create_booking(request, pk):
+    """This function handles the creation of new booking and sends confirmation email on successful booking."""
+    try:
+        resource =Resource.objects.get(pk=pk)
+    except Resource.DoesNotExist:
+        messages.error(request,'Resource not found.')
+        return redirect('list_resources')
+    if request.method =='POST':
+        form =BookingForm(request.POST)
+        if form.is_valid():
+              # Create booking but do not sav eit now
+            new_booking = form.save(commit=False)
+            # Current user is assigned to the booking
+            new_booking.user = request.user
+            # To calculate the duration in hours
+            duration =new_booking.end_time - new_booking.start_time
+            new_booking.duration_hours =duration.total_seconds() / 3600
+            new_booking.save()
+
+            # Sending confirmation email
+            send_mail(
+                subject='Booking Confirmation - Office Resource Booking System',
+                message=f'Hello {request.user.first_name},\n\n'
+                        f'Your booking has been confirmed.\n\n'
+                        f'Resource: {new_booking.resource.resource_name}\n'
+                        f'Start: {new_booking.start_time}\n'
+                        f'End: {new_booking.end_time}\n\n'
+                        f'Regards,\nORBS Team',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[request.user.email],
+                fail_silently=True,
+            )
+            messages.success(request, 'Your booking has been confirmed!')
+            return redirect('my_bookings')
+    else:
+        # Pre-select the resource in the form
+        form = BookingForm(initial={'resource': resource})
+
+    return render(request, 'bookings/booking_form.html', {
+        'form': form,
+        'resource': resource,
+    })
+
+
+@login_required
+def my_bookings(request):
+    """
+    To display all the bookings of the user currently logged in. 
+    It also categorises bookings into upcoming,active and past.
+    """
+    current_time = timezone.now()
+
+    # Getting the current user's confirmed bookings
+    all_bookings = Booking.objects.filter(
+        user=request.user
+    ).order_by('start_time')
+    # Categorise bookings
+    upcoming_bookings = all_bookings.filter(
+        status='confirmed',
+        start_time__gt=current_time
+    )
+    active_bookings = all_bookings.filter(
+        status='confirmed',
+        start_time__lte=current_time,
+        end_time__gte=current_time
+    )
+    past_bookings = all_bookings.filter(
+        end_time__lt=current_time
+    ) | all_bookings.filter(status='cancelled')
+
+    context = {
+        'upcoming_bookings':upcoming_bookings,
+        'active_bookings': active_bookings,
+        'past_bookings': past_bookings,
+    }
+    return render(request, 'bookings/booking_list.html', context)
+
+
+@login_required
+def update_booking(request, pk):
+    """
+    Allows users to edit their existing bookings.
+    Prevents editing of bookings that have already started.
+    """
+    try:
+        existing_booking = Booking.objects.get(pk=pk, user=request.user)
+    except Booking.DoesNotExist:
+        messages.error(request, 'Booking not found.')
+        return redirect('my_bookings')
+
+    # Prevent editing bookings that have already started
+    if existing_booking.start_time <= timezone.now():
+        messages.error(request, 'Unable to edit a booking that is already in progress.')
+        return redirect('my_bookings')
+
+    if request.method == 'POST':
+        form = BookingForm(request.POST, instance=existing_booking)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Booking details updated successfully.')
+            return redirect('my_bookings')
+    else:
+        form = BookingForm(instance=existing_booking)
+
+    return render(request, 'bookings/booking_form.html', {
+        'form': form,
+        'resource': existing_booking.resource,
+    })
+
+
+@login_required
+def cancel_my_booking(request, pk):
+    """
+    The users are allowed to cancel their existing bookings and confirmation email is sent for the same.
+    """
+    try:
+        booking_to_cancel = Booking.objects.get(pk=pk, user=request.user)
+    except Booking.DoesNotExist:
+        messages.error(request, 'Booking not found.')
+        return redirect('my_bookings')
+
+    if request.method == 'POST':
+        booking_to_cancel.status = 'cancelled'
+        booking_to_cancel.save()
+        # Send cancellation email 
+        send_mail(
+            subject='Booking Cancellation - Office Resource Booking System',
+            message=f'Hello {request.user.first_name},\n\n'
+                    f'Your booking has been cancelled.\n\n'
+                    f'Resource: {booking_to_cancel.resource.resource_name}\n'
+                    f'Start: {booking_to_cancel.start_time}\n'
+                    f'End: {booking_to_cancel.end_time}\n\n'
+                    f'Regards,\nORBS Team',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.user.email],
+            fail_silently=True,
+        )
+        messages.success(request, 'Your booking has been cancelled.')
+        return redirect('my_bookings')
+    return render(request, 'bookings/cancel_booking.html', {
+        'booking': booking_to_cancel
+    })

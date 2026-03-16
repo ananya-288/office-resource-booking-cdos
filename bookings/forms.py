@@ -6,7 +6,8 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core import validators
 
-from .models import Resource
+from .models import Resource,Booking
+from django.utils import timezone
 
 
 
@@ -104,3 +105,74 @@ class ResourceForm(forms.ModelForm):
         if len(resource_name) < 3:
             raise forms.ValidationError("Resource name must have at least 3 characters.")
         return resource_name    
+        
+        
+class BookingForm(forms.ModelForm):
+    """ It is the form for creating bookings and also editing it.Handles conflict detection and includes date validation"""
+    
+    class Meta:
+        """Defines the model and fields for the booking form."""
+        model = Booking
+        fields =['resource', 'start_time', 'end_time', 'notes']
+        widgets = {
+            'start_time': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M'
+            ),
+            'end_time':forms.DateTimeInput(
+                attrs={'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M'
+            ),
+            'notes':forms.Textarea(attrs={'rows': 3}),
+        }
+    def __init__(self,*args,**kwargs):
+        """Form initialization and setting datetime input formats."""
+        super().__init__(*args,**kwargs)
+        self.fields['start_time'].input_formats = ['%Y-%m-%dT%H:%M']
+        self.fields['end_time'].input_formats = ['%Y-%m-%dT%H:%M']
+        # It shows only available resources
+        self.fields['resource'].queryset = Resource.objects.filter(
+           is_available=True)
+
+    def clean_start_time(self):
+        """Validates that start time is not in the past."""
+        start_time = self.cleaned_data.get('start_time')
+        if start_time and start_time < timezone.now():
+            raise forms.ValidationError(
+                "Start time cannot be in the past."
+            )
+        return start_time
+
+    def clean_end_time(self):
+        """Validates that end time is after start time."""
+        end_time = self.cleaned_data.get('end_time')
+        start_time= self.cleaned_data.get('start_time')
+        if end_time and start_time and end_time <= start_time:
+            raise forms.ValidationError(
+                "End time must be after start time.")
+        return end_time
+
+    def clean(self):
+        """Conflict detection --> No two bookings are done for the same resource"""
+        cleaned_data = super().clean()
+        resource = cleaned_data.get('resource')
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+
+        if resource and start_time and end_time:
+            # To check if there are overlapping bookings
+            overlapping_booking = Booking.objects.filter(
+                resource=resource,
+                status='confirmed',
+                start_time__lt=end_time,
+                end_time__gt=start_time,
+            )
+            # Exclude current booking when editing
+            if self.instance.pk:
+                overlapping_booking = overlapping_booking.exclude(
+                    pk=self.instance.pk)
+            if overlapping_booking.exists():
+                raise forms.ValidationError(
+                    "This resource is already booked for the selected time. "
+                    "Please choose a different time slot.")
+        return cleaned_data       

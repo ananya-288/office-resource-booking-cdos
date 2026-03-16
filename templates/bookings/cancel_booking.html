@@ -1,0 +1,52 @@
+{% extends 'bookings/base.html' %}
+
+{% block title %}Cancel Booking{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card card-orbs p-4">
+            <h2 class="page-heading">
+                <i class="fas fa-times-circle"></i> Cancel Booking
+            </h2>
+            <p>ARE you sure about cancelling the booking?</p>
+
+            <div class="alert" 
+                 style="background-color: #f0f4f8; 
+                        border-left: 4px solid #f0a500;">
+                <p class="mb-1">
+                    <strong>Resource:</strong> 
+                    {{ booking.resource.resource_name }}
+                </p>
+                <p class="mb-1">
+                    <strong>Location:</strong> 
+                    {{ booking.resource.location}}
+                </p>
+                <p class="mb-1">
+                    <strong>Start:</strong> 
+                    {{ booking.start_time}}
+                </p>
+                <p class="mb-0">
+                    <strong>End:</strong> 
+                    {{ booking.end_time }}
+                </p>
+            </div>
+
+            <p class="text-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                This action cannot be undone. </p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirmCancel()">
+                        <i class="fas fa-times"></i> Yes, Cancel Booking
+                    </button>
+                    <a href="{% url 'my_bookings' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Go Back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

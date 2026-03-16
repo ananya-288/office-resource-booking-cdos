@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-@&+e!@5x)y)2z*28b4@_waw#fzf^d3r&l6=j&@%mfz_=kubcyz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['ae69ebf484dd499fa320a1b2fa3d7a62.vfs.cloud9.us-east-1.amazonaws.com']
+ALLOWED_HOSTS = ['74f80196c5924a2e9b1a988368b655ff.vfs.cloud9.us-east-1.amazonaws.com',
+           'localhost',
+            '127.0.0.1',
+]
 
 
 # Application definition
@@ -126,7 +129,7 @@ STATIC_ROOT= BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://ae69ebf484dd499fa320a1b2fa3d7a62.vfs.cloud9.us-east-1.amazonaws.com',
+    'https://74f80196c5924a2e9b1a988368b655ff.vfs.cloud9.us-east-1.amazonaws.com',
 ]
 
 # Email configuration 

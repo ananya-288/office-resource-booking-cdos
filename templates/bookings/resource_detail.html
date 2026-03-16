@@ -1,6 +1,6 @@
 {% extends 'bookings/base.html' %}
 
-{% block title %}{{ resource.resource_name }} - ORBS{% endblock %}
+{% block title %}{{ resource.resource_name }}{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -16,9 +16,7 @@
                 {% else %}
                     <i class="fas fa-tools"></i>
                 {% endif %}
-                {{ resource.resource_name }}
-            </h2>
-
+                {{resource.resource_name }}</h2>
             <table class="table table-orbs">
                 <tbody>
                     <tr>
@@ -26,17 +24,16 @@
                         <td>
                             <span class="badge"
                                   style="background-color: #f0a500; color: #1a3a5c;">
-                                {{ resource.get_resource_type_display }}
-                            </span>
+                                {{resource.get_resource_type_display}}</span>
                         </td>
                     </tr>
                     <tr>
                         <td><strong>Capacity</strong></td>
-                        <td>{{ resource.capacity }} people</td>
+                        <td>{{ resource.capacity}} people</td>
                     </tr>
                     <tr>
                         <td><strong>Location</strong></td>
-                        <td>{{ resource.location }}</td>
+                        <td>{{resource.location }}</td>
                     </tr>
                     <tr>
                         <td><strong>Status</strong></td>
@@ -51,7 +48,7 @@
                     {% if resource.description %}
                     <tr>
                         <td><strong>Description</strong></td>
-                        <td>{{ resource.description }}</td>
+                        <td>{{resource.description }}</td>
                     </tr>
                     {% endif %}
                 </tbody>
@@ -59,21 +56,19 @@
 
             <div class="mt-3 d-flex gap-2">
                 {% if resource.is_available %}
-                <a href="#" class="btn btn-orbs">
-                    <i class="fas fa-calendar-plus"></i> Book This Resource
-                </a>
+                <a href="{% url 'create_booking' resource.pk %}" class="btn btn-orbs">
+                    <i class="fas fa-calendar-plus"></i>Book This Resource</a>
                 {% endif %}
                 <a href="{% url 'list_resources' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Resources
+                    <i class="fas fa-arrow-left"></i>Back to Resources
                 </a>
                 {% if user.is_staff %}
                 <a href="{% url 'resource_edit' resource.pk %}"
                    class="btn btn-outline-secondary">
-                    <i class="fas fa-edit"></i> Edit
-                </a>
+                    <i class="fas fa-edit"></i> Edit  </a>
                 <a href="{% url 'resource_delete' resource.pk %}"
                    class="btn btn-outline-danger">
-                    <i class="fas fa-trash"></i> Delete
+                    <i class="fas fa-trash"></i>Delete
                 </a>
                 {% endif %}
             </div>
