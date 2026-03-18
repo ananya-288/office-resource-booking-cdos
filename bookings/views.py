@@ -16,6 +16,13 @@ from .forms import UserRegistrationForm,ResourceForm,BookingForm
 
 from django.utils import timezone
 
+from django.db.models import Count,Q
+import logging
+
+
+# Get logger for this module
+logger =logging.getLogger(__name__)
+
 
 def register(request):
     """
@@ -48,6 +55,7 @@ def register(request):
                 recipient_list=[email],
                 fail_silently=True,
             )
+            logger.info('New user registered: %s', username)
             messages.success(request, 'You have been successfully registered. Please log in')
             return redirect('login_user')
     else:
@@ -74,6 +82,7 @@ def login_user(request):
                 return redirect(next_page)
             return redirect('home')
         else:
+            logger.warning('Login attempt failed for username: %s', username)
             messages.error(request, 'Incorrect username or password. Please try again.')
     return render(request, 'bookings/login.html')
     
@@ -224,6 +233,7 @@ def create_booking(request, pk):
             duration =new_booking.end_time - new_booking.start_time
             new_booking.duration_hours =duration.total_seconds() / 3600
             new_booking.save()
+            logger.info('Booking created by user: %s for resource: %s',request.user.username,new_booking.resource.resource_name)
 
             # Sending confirmation email
             send_mail(
@@ -348,6 +358,7 @@ def cancel_my_booking(request, pk):
     if request.method =='POST':
         booking_to_cancel.status ='cancelled'
         booking_to_cancel.save()
+        logger.info('Booking cancelled by user: %s for the resource: %s',request.user.username,booking_to_cancel.resource.resource_name)
 
         # Send cancellation email
         send_mail(
@@ -391,3 +402,109 @@ def display_bookings_admin(request):
         'status_filter': status_filter,
     }
     return render(request, 'bookings/admin_bookings.html', context)
+    
+    
+    
+    # To get the logging info for this module
+logger =logging.getLogger(__name__)
+
+
+@login_required
+def analytics_booking(request):
+    """Only admin has access to this and it displays analytics .
+    It also performs statistical calculations on the booking data.
+    """
+    if not request.user.is_staff:
+        messages.error(request, 'Only administrator can access this .')
+        return redirect('home')
+    # To get current time
+    current_time = timezone.now()
+    today =current_time.date()
+    
+    # To get the total resources
+    total_resources = Resource.objects.count()
+    # Available resources
+    available_resources = Resource.objects.filter(is_available=True).count()
+
+    # Total bookings
+    total_bookings = Booking.objects.count()
+
+    # Today's bookings
+    todays_bookings= Booking.objects.filter(
+        start_time__date=today,
+        status='confirmed'
+    ).count()
+
+    # Cancelled bookings
+    cancelled_bookings =Booking.objects.filter(status='cancelled').count()
+    # Rate of cancellation is calculated
+    if total_bookings >0:
+        cancellation_rate =round((cancelled_bookings / total_bookings) * 100,1)
+    else:
+        cancellation_rate =0
+
+       # To find the most popular resource
+    most_popular = Resource.objects.annotate(
+        booking_count=Count('booking')
+    ).order_by('-booking_count').first()
+    # To calculate the resource utilisation
+    resource_utilisation = Resource.objects.annotate(
+        booking_count=Count('booking')
+    ).order_by('-booking_count')
+
+    # Peak booking hours
+    # Get all confirmed bookings and count by hour
+    all_bookings = Booking.objects.filter(status='confirmed')
+    hour_counts = {}
+    for booking in all_bookings:
+        hour = booking.start_time.hour
+        if hour in hour_counts:
+            hour_counts[hour] += 1
+        else:
+            hour_counts[hour]= 1
+
+      # To find peak hour
+    if hour_counts:
+        peak_hour= max(hour_counts, key=hour_counts.get)
+        peak_hour_display =f"{peak_hour:02d}:00 - {peak_hour+1:02d}:00"
+    else:
+        peak_hour_display ='No data yet'
+        
+    #Bookings this week v/s last week
+    from datetime import timedelta
+    week_start =today - timedelta(days=today.weekday())
+    last_week_start = week_start - timedelta(days=7)
+
+    this_week_bookings =Booking.objects.filter(
+        created_at__date__gte=week_start,
+        status='confirmed'
+    ).count()
+
+    last_week_bookings= Booking.objects.filter(
+        created_at__date__gte=last_week_start,
+        created_at__date__lt=week_start,
+        status='confirmed'
+    ).count()
+
+    # Calculating trends
+    if last_week_bookings >0:
+        trend = round(((this_week_bookings - last_week_bookings) / last_week_bookings) * 100, 1)
+    else:
+        trend =0
+
+    # Log analytics access
+    logger.info('Analytics dashboard accessed by admin: %s', request.user.username)
+    context = {
+        'total_resources': total_resources,
+        'available_resources': available_resources,
+        'total_bookings': total_bookings,
+        'todays_bookings': todays_bookings,
+        'cancellation_rate': cancellation_rate,
+        'most_popular': most_popular,
+        'resource_utilisation': resource_utilisation,
+        'peak_hour_display': peak_hour_display,
+        'this_week_bookings': this_week_bookings,
+        'last_week_bookings': last_week_bookings,
+        'trend': trend,
+    }
+    return render(request, 'bookings/analytics.html',context)

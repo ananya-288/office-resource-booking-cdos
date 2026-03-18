@@ -208,3 +208,7 @@ __marimo__/
 
 # For deployment
 staticfiles/
+
+
+# Log files
+logs/*.log
