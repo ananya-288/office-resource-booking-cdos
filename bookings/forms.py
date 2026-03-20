@@ -74,6 +74,33 @@ class UserRegistrationForm(forms.Form):
             raise forms.ValidationError("This email is already registered.")
         return email
 
+    def clean_password(self):
+        """
+         Checks if the password conains uppercase ,lowecase special character and number.
+        """
+        password = self.cleaned_data.get('password')
+        if password:
+            if len(password) < 8:
+                raise forms.ValidationError(
+                   "Password must be minimum 8 characters long."
+             )
+            if not any(char.isupper() for char in password):
+                raise forms.ValidationError(
+                  "Password must contain at least one uppercase letter.")
+            if not any(char.islower() for char in password):
+                raise forms.ValidationError(
+                "Password must contain at least one lowercase letter."
+             )
+            if not any(char.isdigit() for char in password):
+                raise forms.ValidationError(
+                "Password must contain at least one number."
+            )
+            if not any(char in '!@#$%^&*()_+-=[]{}|;:,.<>?' for char in password):
+                raise forms.ValidationError(
+                "Password must contain at least one special character."
+            )
+        return password
+
     def clean(self):
         """Check if both the passwords match."""
         cleaned_data = super().clean()

@@ -3,6 +3,7 @@
 # Standard library imports
 import logging
 from datetime import timedelta
+import json
 
 # Third party imports
 from django.shortcuts import render,redirect
@@ -505,5 +506,29 @@ def analytics_booking(request):
         'this_week_bookings': this_week_bookings,
         'last_week_bookings': last_week_bookings,
         'trend': trend,
+    }
+    # Resource utilisation bar chart data
+    chart_labels = json.dumps([r.resource_name for r in resource_utilisation])
+    chart_data = json.dumps([r.booking_count for r in resource_utilisation])
+
+    # Booking status doughnut chart data
+    confirmed_bookings = Booking.objects.filter(status='confirmed').count()
+
+    context = {
+        'total_resources': total_resources,
+        'available_resources': available_resources,
+        'total_bookings':total_bookings,
+        'todays_bookings': todays_bookings,
+        'cancellation_rate': cancellation_rate,
+        'most_popular': most_popular,
+        'resource_utilisation': resource_utilisation,
+        'peak_hour_display':peak_hour_display,
+        'this_week_bookings': this_week_bookings,
+        'last_week_bookings': last_week_bookings,
+        'trend': trend,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
+        'confirmed_bookings':confirmed_bookings,
+        'cancelled_bookings': cancelled_bookings,
     }
     return render(request, 'bookings/analytics.html',context)

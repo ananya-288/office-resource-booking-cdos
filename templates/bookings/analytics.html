@@ -98,6 +98,87 @@
         </div>
     </div>
 </div>
+<!-- Charts Section -->
+<div class="row mb-4">
+    <!-- Resource Utilisation Bar Chart -->
+    <div class="col-md-6">
+        <div class="card card-orbs p-4">
+            <h5 class="page-heading">
+                <i class="fas fa-chart-bar"></i> Resource Bookings Chart
+            </h5>
+            <canvas id="resourceChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+
+    <!-- Booking Status Doughnut Chart -->
+    <div class="col-md-6">
+        <div class="card card-orbs p-4">
+            <h5 class="page-heading">
+                <i class="fas fa-chart-pie"></i> Booking Status Chart
+            </h5>
+            <canvas id="statusChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Resource Utilisation Bar Chart
+    const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+    new Chart(resourceCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Number of Bookings',
+                data: {{ chart_data|safe }},
+                backgroundColor: '#f0a500',
+                borderColor: '#1a3a5c',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Booking Status Doughnut Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Confirmed', 'Cancelled'],
+            datasets: [{
+                data: [{{ confirmed_bookings }}, {{ cancelled_bookings }}],
+                backgroundColor: ['#1a3a5c', '#f0a500'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
 
 <!-- Resource Utilisation -->
 <div class="card card-orbs p-4 mb-4">
@@ -146,4 +227,5 @@
     <p class="text-muted">No resource data yet.</p>
     {% endif %}
 </div>
+
 {% endblock %}
