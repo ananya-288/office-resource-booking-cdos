@@ -2,12 +2,15 @@
 User registartion , booking creation and resource management
 """
 
+# Third party imports
 from django import forms
 from django.contrib.auth.models import User
 from django.core import validators
-
-from .models import Resource,Booking
 from django.utils import timezone
+
+# Local imports
+from .models import Resource,Booking
+
 
 
 
@@ -79,9 +82,9 @@ class UserRegistrationForm(forms.Form):
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Passwords do not match.")
         return cleaned_data
-        
+
 class ResourceForm(forms.ModelForm):
-        
+
     """Resource form for creating and editing office resources accessible by admin"""
     class Meta:
         """Defines the model and fields for the resource form."""
@@ -104,12 +107,12 @@ class ResourceForm(forms.ModelForm):
         resource_name = self.cleaned_data.get('resource_name')
         if len(resource_name) < 3:
             raise forms.ValidationError("Resource name must have at least 3 characters.")
-        return resource_name    
-        
-        
+        return resource_name
+
+
 class BookingForm(forms.ModelForm):
     """ It is the form for creating bookings and also editing it.Handles conflict detection and includes date validation"""
-    
+
     class Meta:
         """Defines the model and fields for the booking form."""
         model = Booking
@@ -156,7 +159,7 @@ class BookingForm(forms.ModelForm):
             # To calculate the duration in hours
             duration= end_time - start_time
             duration_hours =duration.total_seconds() / 3600
- 
+
             if duration_hours > 4:
                 raise forms.ValidationError(
                    "Maximum booking duration is 4 hours."
@@ -187,4 +190,4 @@ class BookingForm(forms.ModelForm):
                 raise forms.ValidationError(
                     "This resource is already booked for the selected time. "
                     "Please choose a different time slot.")
-        return cleaned_data       
+        return cleaned_data

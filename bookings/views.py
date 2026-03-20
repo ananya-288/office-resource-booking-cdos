@@ -1,23 +1,24 @@
 """ Views for the Office Resource Booking System . """
-from django.shortcuts import render
+
+# Standard library imports
+import logging
+from datetime import timedelta
+
+# Third party imports
 from django.shortcuts import render,redirect
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
-from .forms import UserRegistrationForm
-
 from django.contrib.auth.decorators import login_required
-from .models import Resource, Booking
-from .forms import UserRegistrationForm, ResourceForm
-
-from .forms import UserRegistrationForm,ResourceForm,BookingForm
-
 from django.utils import timezone
+from django.db.models import Count
 
-from django.db.models import Count,Q
-import logging
+
+# Local imports
+from .models import Resource, Booking
+from .forms import UserRegistrationForm,ResourceForm,BookingForm
 
 
 # Get logger for this module
@@ -39,7 +40,7 @@ def register(request):
             password = form.cleaned_data['password']
 
             # Creating the new account
-            user = User.objects.create_user(
+            User.objects.create_user(
                 username=username,
                 email=email,
                 first_name=first_name,
@@ -81,11 +82,10 @@ def login_user(request):
             if next_page:
                 return redirect(next_page)
             return redirect('home')
-        else:
-            logger.warning('Login attempt failed for username: %s', username)
-            messages.error(request, 'Incorrect username or password. Please try again.')
+        logger.warning('Login attempt failed for username: %s', username)
+        messages.error(request, 'Incorrect username or password. Please try again.')
     return render(request, 'bookings/login.html')
-    
+
 def home(request):
     """
     Home page of the application is rendered
@@ -105,7 +105,7 @@ def logout_user(request):
 @login_required
 def list_resources(request):
     """All the available resources are displayed along with search and filter functionality."""
-    
+
     resources = Resource.objects.filter(is_available=True)
     resource_type = request.GET.get('resource_type', '')
     min_capacity = request.GET.get('min_capacity', '')
@@ -263,7 +263,7 @@ def create_booking(request, pk):
 @login_required
 def my_bookings(request):
     """
-    To display all the bookings of the user currently logged in. 
+    To display all the bookings of the user currently logged in.
     It also categorises bookings into upcoming,active and past.
     """
     current_time = timezone.now()
@@ -310,14 +310,14 @@ def update_booking(request, pk):
     if existing_booking.start_time <= timezone.now():
         messages.error(request, 'Unable to edit a booking that is already in progress.')
         return redirect('my_bookings')
-        
+
     # Prevent editing bookings within 1 hour of start time
     time_until_start = existing_booking.start_time - timezone.now()
     if time_until_start.total_seconds() < 3600:
         messages.error(
            request,
              'Bookings cannot be edited within 1 hour of the start time.' )
-        return redirect('my_bookings')    
+        return redirect('my_bookings')
 
     if request.method == 'POST':
         form = BookingForm(request.POST, instance=existing_booking)
@@ -332,8 +332,8 @@ def update_booking(request, pk):
         'form': form,
         'resource': existing_booking.resource,
     })
-    
-    
+
+
 
 
 @login_required
@@ -379,7 +379,7 @@ def cancel_my_booking(request, pk):
     return render(request, 'bookings/cancel_booking.html', {
         'booking': booking_to_cancel
     })
-    
+
 @login_required
 def display_bookings_admin(request):
     """
@@ -402,9 +402,9 @@ def display_bookings_admin(request):
         'status_filter': status_filter,
     }
     return render(request, 'bookings/admin_bookings.html', context)
-    
-    
-    
+
+
+
     # To get the logging info for this module
 logger =logging.getLogger(__name__)
 
@@ -420,7 +420,7 @@ def analytics_booking(request):
     # To get current time
     current_time = timezone.now()
     today =current_time.date()
-    
+
     # To get the total resources
     total_resources = Resource.objects.count()
     # Available resources
@@ -469,9 +469,8 @@ def analytics_booking(request):
         peak_hour_display =f"{peak_hour:02d}:00 - {peak_hour+1:02d}:00"
     else:
         peak_hour_display ='No data yet'
-        
+
     #Bookings this week v/s last week
-    from datetime import timedelta
     week_start =today - timedelta(days=today.weekday())
     last_week_start = week_start - timedelta(days=7)
 

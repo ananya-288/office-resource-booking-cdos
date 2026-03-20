@@ -22,8 +22,9 @@ class TestResourceModel:
         """To test resource is available by default."""
         resource =mixer.blend('bookings.Resource')
         assert resource.is_available is True
-        
+
     def test_resource_string_representation(self):
+        """To test string representation of resource."""
         resource= mixer.blend('bookings.Resource',resource_name='Conference Room A',resource_type='meeting_room')
         assert 'Conference Room A' in str(resource)
 
@@ -43,6 +44,7 @@ class TestBookingModel:
         assert booking.status == 'confirmed'
 
     def test_booking_can_be_cancelled(self):
+        """"To test if booking can be cancelled."""
         booking = mixer.blend('bookings.Booking', status='confirmed')
         booking.status = 'cancelled'
         booking.save()

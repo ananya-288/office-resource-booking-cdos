@@ -49,4 +49,3 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.user.username}-{self.resource.resource_name}({self.start_time})"
-
