@@ -25,6 +25,10 @@ from .forms import UserRegistrationForm,ResourceForm,BookingForm
 # Get logger for this module
 logger =logging.getLogger(__name__)
 
+# Common message constants
+MSG_RESOURCE_NOT_FOUND = 'Resource not found.'
+MSG_ACCESS_RESTRICTED = 'Access restricted to administrators only.'
+MSG_BOOKING_NOT_FOUND = 'Booking not found.'
 
 def register(request):
     """
@@ -80,7 +84,8 @@ def login_user(request):
             messages.success(request, f'Hello {user.first_name}, welcome back')
             # If specified redirect to next page
             next_page = request.POST.get('next') or request.GET.get('next')
-            if next_page:
+            # Validating next_page
+            if next_page and next_page.startswith('/'):
                 return redirect(next_page)
             return redirect('home')
         logger.warning('Login attempt failed for username: %s', username)
@@ -135,7 +140,7 @@ def resource_detail(request, pk):
     try:
         resource = Resource.objects.get(pk=pk)
     except Resource.DoesNotExist:
-        messages.error(request, 'Resource not found.')
+        messages.error(request, MSG_RESOURCE_NOT_FOUND)
         return redirect('list_resources')
     return render(request, 'bookings/resource_detail.html', {'resource': resource})
 
@@ -147,7 +152,7 @@ def resource_create(request):
     """
     # Only admins can add resources
     if not request.user.is_staff:
-        messages.error(request, 'Access restricted to administrators only.')
+        messages.error(request, MSG_ACCESS_RESTRICTED)
         return redirect('list_resources')
 
     if request.method == 'POST':
@@ -171,12 +176,12 @@ def resource_edit(request, pk):
     Allows administrators to edit an existing resource.
     """
     if not request.user.is_staff:
-        messages.error(request,'Access restricted to administrators only.')
+        messages.error(request,MSG_ACCESS_RESTRICTED)
         return redirect('list_resources')
     try:
         resource =Resource.objects.get(pk=pk)
     except Resource.DoesNotExist:
-        messages.error(request, 'Resource not found.')
+        messages.error(request, MSG_RESOURCE_NOT_FOUND)
         return redirect('list_resources')
     if request.method == 'POST':
         form =ResourceForm(request.POST, instance=resource)
@@ -198,13 +203,13 @@ def resource_delete(request, pk):
     Allows administrators to delete a resource.
     """
     if not request.user.is_staff:
-        messages.error(request, 'Access restricted to administrators only.')
+        messages.error(request, MSG_ACCESS_RESTRICTED)
         return redirect('list_resources')
 
     try:
         resource = Resource.objects.get(pk=pk)
     except Resource.DoesNotExist:
-        messages.error(request, 'Resource not found.')
+        messages.error(request, MSG_RESOURCE_NOT_FOUND)
         return redirect('list_resources')
 
     if request.method == 'POST':
@@ -221,7 +226,7 @@ def create_booking(request, pk):
     try:
         resource =Resource.objects.get(pk=pk)
     except Resource.DoesNotExist:
-        messages.error(request,'Resource not found.')
+        messages.error(request,MSG_RESOURCE_NOT_FOUND)
         return redirect('list_resources')
     if request.method =='POST':
         form =BookingForm(request.POST)
@@ -304,7 +309,7 @@ def update_booking(request, pk):
     try:
         existing_booking = Booking.objects.get(pk=pk, user=request.user)
     except Booking.DoesNotExist:
-        messages.error(request, 'Booking not found.')
+        messages.error(request, MSG_BOOKING_NOT_FOUND)
         return redirect('my_bookings')
 
     # Prevent editing bookings that have already started
@@ -346,7 +351,7 @@ def cancel_my_booking(request, pk):
     try:
         booking_to_cancel =Booking.objects.get(pk=pk, user=request.user)
     except Booking.DoesNotExist:
-        messages.error(request, 'Booking not found.')
+        messages.error(request, MSG_BOOKING_NOT_FOUND)
         return redirect('my_bookings')
     # Prevent cancellation within 1 hour of start time
     time_until_start = booking_to_cancel.start_time - timezone.now()
@@ -387,7 +392,7 @@ def display_bookings_admin(request):
     This method is to display all booking made by all users. Only admin can access.
     """
     if not request.user.is_staff:
-        messages.error(request, 'Access restricted to administrators only.')
+        messages.error(request, MSG_ACCESS_RESTRICTED)
         return redirect('home')
 
     # Most recent is fetched first and getting all bookings.
@@ -405,130 +410,109 @@ def display_bookings_admin(request):
     return render(request, 'bookings/admin_bookings.html', context)
 
 
-
-    # To get the logging info for this module
-logger =logging.getLogger(__name__)
-
-
-@login_required
-def analytics_booking(request):
-    """Only admin has access to this and it displays analytics .
-    It also performs statistical calculations on the booking data.
-    """
-    if not request.user.is_staff:
-        messages.error(request, 'Only administrator can access this .')
-        return redirect('home')
-    # To get current time
-    current_time = timezone.now()
-    today =current_time.date()
-
-    # To get the total resources
-    total_resources = Resource.objects.count()
-    # Available resources
-    available_resources = Resource.objects.filter(is_available=True).count()
-
-    # Total bookings
+def get_booking_stats():
+    """Calculate booking statistics for analytics dashboard."""
     total_bookings = Booking.objects.count()
-
-    # Today's bookings
-    todays_bookings= Booking.objects.filter(
-        start_time__date=today,
-        status='confirmed'
-    ).count()
-
-    # Cancelled bookings
-    cancelled_bookings =Booking.objects.filter(status='cancelled').count()
-    # Rate of cancellation is calculated
-    if total_bookings >0:
-        cancellation_rate =round((cancelled_bookings / total_bookings) * 100,1)
+    cancelled_bookings = Booking.objects.filter(status='cancelled').count()
+    confirmed_bookings = Booking.objects.filter(status='confirmed').count()
+    if total_bookings > 0:
+        cancellation_rate = round((cancelled_bookings / total_bookings) * 100, 1)
     else:
-        cancellation_rate =0
+        cancellation_rate = 0
+    return total_bookings, cancelled_bookings, confirmed_bookings, cancellation_rate
 
-       # To find the most popular resource
-    most_popular = Resource.objects.annotate(
-        booking_count=Count('booking')
-    ).order_by('-booking_count').first()
-    # To calculate the resource utilisation
-    resource_utilisation = Resource.objects.annotate(
-        booking_count=Count('booking')
-    ).order_by('-booking_count')
 
-    # Peak booking hours
-    # Get all confirmed bookings and count by hour
+def get_peak_hour():
+    """Calculate peak booking hour from all confirmed bookings."""
     all_bookings = Booking.objects.filter(status='confirmed')
     hour_counts = {}
     for booking in all_bookings:
         hour = booking.start_time.hour
-        if hour in hour_counts:
-            hour_counts[hour] += 1
-        else:
-            hour_counts[hour]= 1
-
-      # To find peak hour
+        hour_counts[hour] = hour_counts.get(hour, 0) + 1
     if hour_counts:
-        peak_hour= max(hour_counts, key=hour_counts.get)
-        peak_hour_display =f"{peak_hour:02d}:00 - {peak_hour+1:02d}:00"
-    else:
-        peak_hour_display ='No data yet'
+        peak_hour = max(hour_counts, key=hour_counts.get)
+        return f"{peak_hour:02d}:00 - {peak_hour+1:02d}:00"
+    return 'No data yet'
 
-    #Bookings this week v/s last week
-    week_start =today - timedelta(days=today.weekday())
+
+def get_weekly_trend():
+    """Calculate booking trend this week v/s last week."""
+    today = timezone.now().date()
+    week_start = today - timedelta(days=today.weekday())
     last_week_start = week_start - timedelta(days=7)
-
-    this_week_bookings =Booking.objects.filter(
+    this_week =Booking.objects.filter(
         created_at__date__gte=week_start,
         status='confirmed'
     ).count()
-
-    last_week_bookings= Booking.objects.filter(
+    last_week =Booking.objects.filter(
         created_at__date__gte=last_week_start,
         created_at__date__lt=week_start,
         status='confirmed'
     ).count()
-
-    # Calculating trends
-    if last_week_bookings >0:
-        trend = round(((this_week_bookings - last_week_bookings) / last_week_bookings) * 100, 1)
+    if last_week > 0:
+        trend =round(((this_week - last_week) / last_week) * 100, 1)
     else:
         trend =0
+    return this_week, last_week, trend
+
+@login_required
+def analytics_booking(request):
+    """
+    Displays resource usage analytics.
+    """
+    if not request.user.is_staff:
+        messages.error(request, MSG_ACCESS_RESTRICTED)
+        return redirect('home')
+
+    current_time =timezone.now()
+    today = current_time.date()
+
+    # Resource statistics
+    total_resources = Resource.objects.count()
+    available_resources = Resource.objects.filter(is_available=True).count()
+    todays_bookings = Booking.objects.filter(
+        start_time__date=today,
+        status='confirmed'
+    ).count()
+
+    total_bookings, cancelled_bookings,confirmed_bookings, cancellation_rate = get_booking_stats()
+
+    # Most popular resource
+    most_popular = Resource.objects.annotate(
+        booking_count=Count('booking')
+    ).order_by('-booking_count').first()
+
+    # Resource utilisation
+    resource_utilisation = Resource.objects.annotate(
+        booking_count=Count('booking')
+    ).order_by('-booking_count')
+
+    peak_hour_display = get_peak_hour()
+
+    this_week_bookings, last_week_bookings, trend = get_weekly_trend()
+
+    # Prepare chart data
+    chart_labels = json.dumps([r.resource_name for r in resource_utilisation])
+    chart_data = json.dumps([r.booking_count for r in resource_utilisation])
 
     # Log analytics access
     logger.info('Analytics dashboard accessed by admin: %s', request.user.username)
+
     context = {
         'total_resources': total_resources,
-        'available_resources': available_resources,
+        'available_resources':available_resources,
         'total_bookings': total_bookings,
         'todays_bookings': todays_bookings,
-        'cancellation_rate': cancellation_rate,
+        'cancellation_rate':cancellation_rate,
         'most_popular': most_popular,
-        'resource_utilisation': resource_utilisation,
+        'resource_utilisation':resource_utilisation,
         'peak_hour_display': peak_hour_display,
         'this_week_bookings': this_week_bookings,
         'last_week_bookings': last_week_bookings,
         'trend': trend,
-    }
-    # Resource utilisation bar chart data
-    chart_labels = json.dumps([r.resource_name for r in resource_utilisation])
-    chart_data = json.dumps([r.booking_count for r in resource_utilisation])
-
-    # Booking status doughnut chart data
-    confirmed_bookings = Booking.objects.filter(status='confirmed').count()
-
-    context = {
-        'total_resources': total_resources,
-        'available_resources': available_resources,
-        'total_bookings':total_bookings,
-        'todays_bookings': todays_bookings,
-        'cancellation_rate': cancellation_rate,
-        'most_popular': most_popular,
-        'resource_utilisation': resource_utilisation,
-        'peak_hour_display':peak_hour_display,
-        'this_week_bookings': this_week_bookings,
-        'last_week_bookings': last_week_bookings,
-        'trend': trend,
-        'chart_labels': chart_labels,
+        'chart_labels':chart_labels,
         'chart_data': chart_data,
-        'confirmed_bookings':confirmed_bookings,
+        'confirmed_bookings': confirmed_bookings,
         'cancelled_bookings': cancelled_bookings,
     }
-    return render(request, 'bookings/analytics.html',context)
+    return render(request, 'bookings/analytics.html', context)

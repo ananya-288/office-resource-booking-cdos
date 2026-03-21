@@ -11,14 +11,14 @@
     <form method="GET">
         <div class="row g-3">
             <div class="col-md-4">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control"
+                <label class="form-label" for="id_search">Search</label>
+                <input type="text" name="search" id="id_search" class="form-control"
                        placeholder="Search by name"
                        value="{{ search_query }}">
             </div>
             <div class="col-md-4">
-                <label class="form-label">Filter by Type</label>
-                <select name="resource_type" class="form-select">
+                <label class="form-label" for="id_resource_type">Filter by Type</label>
+                <select name="resource_type" id="id_resource_type" class="form-select">
                     <option value="">All Types</option>
                     {% for value, label in resource_types %}
                     <option value="{{ value }}"
@@ -29,8 +29,8 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label">Min Capacity</label>
-                <input type="number" name="min_capacity" class="form-control"
+                <label class="form-label" for="id_min_capacity">Min Capacity</label>
+                <input type="number" name="min_capacity" id="id_min_capacity" class="form-control"
                        placeholder="e.g. 5" value="{{ min_capacity }}" min="1">
             </div>
             <div class="col-md-2 d-flex align-items-end">

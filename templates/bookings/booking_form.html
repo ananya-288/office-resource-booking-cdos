@@ -23,8 +23,8 @@
                 {% csrf_token %}
                 <!-- Start Time -->
                 <div class="mb-3">
-                    <label class="form-label">Start Time</label>
-                    <input type="datetime-local" name="start_time"
+                    <label class="form-label" for="id_start_time">Start Time</label>
+                    <input type="datetime-local" name="start_time" id="id_start_time"
                            class="form-control"
                            value="{{ form.start_time.value|default:'' }}" required>
                     {% if form.start_time.errors %}
@@ -34,8 +34,8 @@
 
                 <!-- End Time -->
                 <div class="mb-3">
-                    <label class="form-label">End Time</label>
-                    <input type="datetime-local" name="end_time"
+                    <label class="form-label" for="id_end_time">End Time</label>
+                    <input type="datetime-local" name="end_time" id="id_end_time"
                            class="form-control"
                            value="{{ form.end_time.value|default:'' }}" required>
                     {% if form.end_time.errors %}
@@ -47,8 +47,8 @@
 
                 <!-- Notes -->
                 <div class="mb-3">
-                    <label class="form-label">Notes (Optional)</label>
-                    <textarea name="notes" class="form-control" rows="3"
+                    <label class="form-label" for="id_notes">Notes (Optional)</label>
+                    <textarea name="notes"  id="id_notes" class="form-control" rows="3"
                               placeholder="Any special requirements...">{{ form.notes.value|default:'' }}</textarea>
                 </div>
                 <!-- Conflict detection non field errors -->

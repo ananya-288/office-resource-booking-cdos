@@ -13,8 +13,8 @@
                 {% csrf_token %}
                 <!-- Username -->
                 <div class="mb-3">
-                    <label class="form-label">Username</label>
-                    <input type="text" name="username" class="form-control"
+                    <label class="form-label" for="id_username">Username</label>
+                    <input type="text" name="username" id="id_username" class="form-control"
                            placeholder="Enter username" required>
                     {% if form.username.errors %}
                         <div class="text-danger">{{ form.username.errors }}</div>
@@ -22,8 +22,8 @@
                 </div>
                 <!-- Email -->
                 <div class="mb-3">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-control"
+                    <label class="form-label" for="id_email">Email Address</label>
+                    <input type="email" name="email" id="id_email" class="form-control"
                            placeholder="Enter email" required>
                     {% if form.email.errors %}
                         <div class="text-danger">{{ form.email.errors }}</div>
@@ -32,8 +32,8 @@
 
                 <!-- First Name -->
                 <div class="mb-3">
-                    <label class="form-label">First Name</label>
-                    <input type="text" name="first_name" class="form-control"
+                    <label class="form-label" for="id_first_name">First Name</label>
+                    <input type="text" name="first_name" id="id_first_name"  class="form-control"
                            placeholder="Enter first name" required>
                     {% if form.first_name.errors %}
                         <div class="text-danger">{{ form.first_name.errors }}</div>
@@ -41,8 +41,8 @@
                 </div>
                 <!-- Last Name -->
                 <div class="mb-3">
-                    <label class="form-label">Last Name</label>
-                    <input type="text" name="last_name" class="form-control"
+                    <label class="form-label" for="id_last_name">Last Name</label>
+                    <input type="text" name="last_name" id="id_last_name" class="form-control"
                            placeholder="Enter last name" required>
                     {% if form.last_name.errors %}
                         <div class="text-danger">{{ form.last_name.errors }}</div>
@@ -51,8 +51,8 @@
 
                 <!-- Password -->
                 <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-control"
+                    <label class="form-label" for="id_password">Password</label>
+                    <input type="password" name="password" id="id_password" class="form-control"
                            placeholder="Enter password" required>
                     {% if form.password.errors %}
                         <div class="text-danger">{{ form.password.errors }}</div>
@@ -61,8 +61,8 @@
 
                 <!-- Confirm Password -->
                 <div class="mb-3">
-                    <label class="form-label">Confirm Password</label>
-                    <input type="password" name="confirm_password" class="form-control"
+                    <label class="form-label" for="id_confirm_password">Confirm Password</label>
+                    <input type="password" name="confirm_password" id="id_confirm_password" class="form-control"
                            placeholder="Confirm password" required>
                     {% if form.confirm_password.errors %}
                         <div class="text-danger">{{ form.confirm_password.errors }}</div>

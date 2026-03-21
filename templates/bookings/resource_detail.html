@@ -18,41 +18,48 @@
                 {% endif %}
                 {{resource.resource_name }}</h2>
             <table class="table table-orbs">
-                <tbody>
-                    <tr>
-                        <td><strong>Type</strong></td>
-                        <td>
-                            <span class="badge"
-                                  style="background-color: #f0a500; color: #1a3a5c;">
-                                {{resource.get_resource_type_display}}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Capacity</strong></td>
-                        <td>{{ resource.capacity}} people</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Location</strong></td>
-                        <td>{{resource.location }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Status</strong></td>
-                        <td>
-                            {% if resource.is_available %}
-                            <span class="badge bg-success">Available</span>
-                            {% else %}
-                            <span class="badge bg-danger">Unavailable</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% if resource.description %}
-                    <tr>
-                        <td><strong>Description</strong></td>
-                        <td>{{resource.description }}</td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+    <thead>
+        <tr>
+            <th scope="col">Property</th>
+            <th scope="col">Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Type</strong></td>
+            <td>
+                <span class="badge"
+                      style="background-color: #f0a500; color: #1a3a5c;">
+                    {{ resource.get_resource_type_display }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Capacity</strong></td>
+            <td>{{ resource.capacity }} people</td>
+        </tr>
+        <tr>
+            <td><strong>Location</strong></td>
+            <td>{{ resource.location }}</td>
+        </tr>
+        <tr>
+            <td><strong>Status</strong></td>
+            <td>
+                {% if resource.is_available %}
+                <span class="badge bg-success">Available</span>
+                {% else %}
+                <span class="badge bg-danger">Unavailable</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% if resource.description %}
+        <tr>
+            <td><strong>Description</strong></td>
+            <td>{{ resource.description }}</td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>
 
             <div class="mt-3 d-flex gap-2">
                 {% if resource.is_available %}

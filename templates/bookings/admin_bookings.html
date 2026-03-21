@@ -12,8 +12,8 @@
     <form method="GET">
         <div class="row g-3">
             <div class="col-md-4">
-                <label class="form-label">Filter by Status</label>
-                <select name="status" class="form-select">
+                <label class="form-label" for="id_status">Filter by Status</label>
+                <select name="status" id="id_status" class="form-select">
                     <option value="">All Bookings</option>
                     <option value="confirmed" 
                         {% if status_filter == 'confirmed' %}selected{% endif %}>
