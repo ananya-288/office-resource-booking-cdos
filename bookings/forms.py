@@ -11,8 +11,8 @@ from django.utils import timezone
 # Local imports
 from .models import Resource,Booking
 
-
-
+# Constant for datetime input format
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M'
 
 class UserRegistrationForm(forms.Form):
     """
@@ -147,19 +147,19 @@ class BookingForm(forms.ModelForm):
         widgets = {
             'start_time': forms.DateTimeInput(
                 attrs={'type': 'datetime-local'},
-                format='%Y-%m-%dT%H:%M'
+                format=DATETIME_FORMAT
             ),
             'end_time':forms.DateTimeInput(
                 attrs={'type': 'datetime-local'},
-                format='%Y-%m-%dT%H:%M'
+                format=DATETIME_FORMAT
             ),
             'notes':forms.Textarea(attrs={'rows': 3}),
         }
     def __init__(self,*args,**kwargs):
         """Form initialization and setting datetime input formats."""
         super().__init__(*args,**kwargs)
-        self.fields['start_time'].input_formats = ['%Y-%m-%dT%H:%M']
-        self.fields['end_time'].input_formats = ['%Y-%m-%dT%H:%M']
+        self.fields['start_time'].input_formats = [DATETIME_FORMAT]
+        self.fields['end_time'].input_formats = [DATETIME_FORMAT]
         # It shows only available resources
         self.fields['resource'].queryset = Resource.objects.filter(
            is_available=True)

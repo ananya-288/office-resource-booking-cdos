@@ -88,7 +88,7 @@ def login_user(request):
             if next_page and next_page.startswith('/'):
                 return redirect(next_page)
             return redirect('home')
-        logger.warning('Login attempt failed for username: %s', username)
+        logger.warning('Login attempt failed for user')
         messages.error(request, 'Incorrect username or password. Please try again.')
     return render(request, 'bookings/login.html')
 
@@ -424,7 +424,9 @@ def get_booking_stats():
 
 def get_peak_hour():
     """Calculate peak booking hour from all confirmed bookings."""
-    all_bookings = Booking.objects.filter(status='confirmed')
+    all_bookings = Booking.objects.filter(
+                    status='confirmed'
+    ).select_related('resource', 'user')
     hour_counts = {}
     for booking in all_bookings:
         hour = booking.start_time.hour
@@ -443,12 +445,12 @@ def get_weekly_trend():
     this_week =Booking.objects.filter(
         created_at__date__gte=week_start,
         status='confirmed'
-    ).count()
+    ).select_related('resource', 'user').count()
     last_week =Booking.objects.filter(
         created_at__date__gte=last_week_start,
         created_at__date__lt=week_start,
         status='confirmed'
-    ).count()
+    ).select_related('resource', 'user').count()
     if last_week > 0:
         trend =round(((this_week - last_week) / last_week) * 100, 1)
     else:
