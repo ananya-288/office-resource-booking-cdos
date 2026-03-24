@@ -81,6 +81,7 @@ def login_user(request):
         user =authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            logger.info('User logged in successfully')
             messages.success(request, f'Hello {user.first_name}, welcome back')
             # If specified redirect to next page
             next_page = request.POST.get('next') or request.GET.get('next')
@@ -104,6 +105,7 @@ def logout_user(request):
     Clearing the user session and redirecting to login page.
     """
     logout(request)
+    logger.info('User logged out.')
     messages.success(request, 'You have been logged out successfully.')
     return redirect('login_user')
 
@@ -159,6 +161,7 @@ def resource_create(request):
         form = ResourceForm(request.POST)
         if form.is_valid():
             form.save()
+            logger.info('Resource created by admin: %s', request.user.username)
             messages.success(request, 'Resource has been added to the system.')
             return redirect('list_resources')
     else:
@@ -187,6 +190,7 @@ def resource_edit(request, pk):
         form =ResourceForm(request.POST, instance=resource)
         if form.is_valid():
             form.save()
+            logger.info('Resource updated by admin: %s', request.user.username)
             messages.success(request,'Resource details have been updated.')
             return redirect('list_resources')
     else:
@@ -196,7 +200,7 @@ def resource_edit(request, pk):
         'title': 'Edit Resource'})
 
 
-@login_required
+
 @login_required
 def resource_delete(request, pk):
     """
@@ -214,6 +218,7 @@ def resource_delete(request, pk):
 
     if request.method == 'POST':
         resource.delete()
+        logger.info('Resource deleted by admin: %s', request.user.username)
         messages.success(request, 'Resource successfully deleted.')
         return redirect('list_resources')
 
@@ -329,6 +334,20 @@ def update_booking(request, pk):
         form = BookingForm(request.POST, instance=existing_booking)
         if form.is_valid():
             form.save()
+            # Send update confirmation email
+            send_mail(
+                subject='Booking Updated - ORBS',
+                message=f'Hello {request.user.first_name},\n\n'
+                        f'Your booking has been updated.\n\n'
+                        f'Resource: {existing_booking.resource.resource_name}\n'
+                        f'New Start: {existing_booking.start_time}\n'
+                        f'New End: {existing_booking.end_time}\n\n'
+                        f'Regards,\nORBS Team',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.user.email],
+            fail_silently=True,
+            )
+            logger.info('Booking updated by user: %s', request.user.username)
             messages.success(request, 'Booking details updated successfully.')
             return redirect('my_bookings')
     else:
@@ -410,12 +429,30 @@ def display_bookings_admin(request):
     return render(request, 'bookings/admin_bookings.html', context)
 
 
+def get_resource_stats(today):
+    """Calculate resource statistics for analytics dashboard."""
+    total_resources = Resource.objects.count()
+    available_resources = Resource.objects.filter(is_available=True).count()
+    todays_bookings = Booking.objects.filter(
+        start_time__date=today,
+        status='confirmed'
+    ).count()
+    most_popular = Resource.objects.annotate(
+        booking_count=Count('booking')
+    ).order_by('-booking_count').first()
+    resource_utilisation = Resource.objects.annotate(
+        booking_count=Count('booking')
+    ).order_by('-booking_count')
+    return (total_resources, available_resources,
+            todays_bookings, most_popular, resource_utilisation)
+
+
 def get_booking_stats():
-    """Calculate booking statistics for analytics dashboard."""
-    total_bookings = Booking.objects.count()
+    """To calculate booking stats"""
+    total_bookings =Booking.objects.count()
     cancelled_bookings = Booking.objects.filter(status='cancelled').count()
-    confirmed_bookings = Booking.objects.filter(status='confirmed').count()
-    if total_bookings > 0:
+    confirmed_bookings =Booking.objects.filter(status='confirmed').count()
+    if total_bookings> 0:
         cancellation_rate = round((cancelled_bookings / total_bookings) * 100, 1)
     else:
         cancellation_rate = 0
@@ -423,98 +460,79 @@ def get_booking_stats():
 
 
 def get_peak_hour():
-    """Calculate peak booking hour from all confirmed bookings."""
+    """To calculate peak booking hour."""
     all_bookings = Booking.objects.filter(
-                    status='confirmed'
+        status='confirmed'
     ).select_related('resource', 'user')
     hour_counts = {}
     for booking in all_bookings:
-        hour = booking.start_time.hour
+        hour =booking.start_time.hour
         hour_counts[hour] = hour_counts.get(hour, 0) + 1
     if hour_counts:
-        peak_hour = max(hour_counts, key=hour_counts.get)
+        peak_hour =max(hour_counts, key=hour_counts.get)
         return f"{peak_hour:02d}:00 - {peak_hour+1:02d}:00"
     return 'No data yet'
 
 
 def get_weekly_trend():
     """Calculate booking trend this week v/s last week."""
-    today = timezone.now().date()
+    today =timezone.now().date()
     week_start = today - timedelta(days=today.weekday())
-    last_week_start = week_start - timedelta(days=7)
-    this_week =Booking.objects.filter(
+    last_week_start =week_start - timedelta(days=7)
+    this_week = Booking.objects.filter(
         created_at__date__gte=week_start,
         status='confirmed'
     ).select_related('resource', 'user').count()
-    last_week =Booking.objects.filter(
+    last_week = Booking.objects.filter(
         created_at__date__gte=last_week_start,
         created_at__date__lt=week_start,
         status='confirmed'
-    ).select_related('resource', 'user').count()
+    ).select_related('resource','user').count()
     if last_week > 0:
-        trend =round(((this_week - last_week) / last_week) * 100, 1)
+        trend =round(((this_week - last_week) /last_week) * 100, 1)
     else:
-        trend =0
-    return this_week, last_week, trend
+        trend = 0
+    return this_week, last_week,trend
+
+
+def get_chart_data(resource_utilisation):
+    """Prepare chart data for analytics dashboard."""
+    chart_labels=json.dumps([r.resource_name for r in resource_utilisation])
+    chart_data =json.dumps([r.booking_count for r in resource_utilisation])
+    return chart_labels,chart_data
+
 
 @login_required
 def analytics_booking(request):
     """
-    Displays resource usage analytics.
+    Displays resource usage analytics and insights.Only admins can see this.
     """
     if not request.user.is_staff:
         messages.error(request, MSG_ACCESS_RESTRICTED)
         return redirect('home')
+    today =timezone.now().date()
+    res_stats =get_resource_stats(today)
+    book_stats = get_booking_stats()
+    chart_labels, chart_data = get_chart_data(res_stats[4])
 
-    current_time =timezone.now()
-    today = current_time.date()
-
-    # Resource statistics
-    total_resources = Resource.objects.count()
-    available_resources = Resource.objects.filter(is_available=True).count()
-    todays_bookings = Booking.objects.filter(
-        start_time__date=today,
-        status='confirmed'
-    ).count()
-
-    total_bookings, cancelled_bookings,confirmed_bookings, cancellation_rate = get_booking_stats()
-
-    # Most popular resource
-    most_popular = Resource.objects.annotate(
-        booking_count=Count('booking')
-    ).order_by('-booking_count').first()
-
-    # Resource utilisation
-    resource_utilisation = Resource.objects.annotate(
-        booking_count=Count('booking')
-    ).order_by('-booking_count')
-
-    peak_hour_display = get_peak_hour()
-
-    this_week_bookings, last_week_bookings, trend = get_weekly_trend()
-
-    # Prepare chart data
-    chart_labels = json.dumps([r.resource_name for r in resource_utilisation])
-    chart_data = json.dumps([r.booking_count for r in resource_utilisation])
-
-    # Log analytics access
     logger.info('Analytics dashboard accessed by admin: %s', request.user.username)
 
     context = {
-        'total_resources': total_resources,
-        'available_resources':available_resources,
-        'total_bookings': total_bookings,
-        'todays_bookings': todays_bookings,
-        'cancellation_rate':cancellation_rate,
-        'most_popular': most_popular,
-        'resource_utilisation':resource_utilisation,
-        'peak_hour_display': peak_hour_display,
-        'this_week_bookings': this_week_bookings,
-        'last_week_bookings': last_week_bookings,
-        'trend': trend,
-        'chart_labels':chart_labels,
+        'total_resources': res_stats[0],
+        'available_resources': res_stats[1],
+        'todays_bookings': res_stats[2],
+        'most_popular': res_stats[3],
+        'resource_utilisation': res_stats[4],
+        'total_bookings': book_stats[0],
+        'cancelled_bookings': book_stats[1],
+        'confirmed_bookings': book_stats[2],
+        'cancellation_rate': book_stats[3],
+        'peak_hour_display': get_peak_hour(),
+        'this_week_bookings': get_weekly_trend()[0],
+        'last_week_bookings': get_weekly_trend()[1],
+        'trend': get_weekly_trend()[2],
+        'chart_labels': chart_labels,
         'chart_data': chart_data,
-        'confirmed_bookings': confirmed_bookings,
-        'cancelled_bookings': cancelled_bookings,
     }
     return render(request, 'bookings/analytics.html', context)
+    
