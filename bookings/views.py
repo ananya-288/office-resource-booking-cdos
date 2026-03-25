@@ -97,6 +97,8 @@ def home(request):
     """
     Home page of the application is rendered
     """
+    if not request.user.is_authenticated:
+        return redirect('login_user')
     return render(request, 'bookings/home.html')
 
 
@@ -114,7 +116,7 @@ def logout_user(request):
 def list_resources(request):
     """All the available resources are displayed along with search and filter functionality."""
 
-    resources = Resource.objects.filter(is_available=True)
+    resources = Resource.objects.all()
     resource_type = request.GET.get('resource_type', '')
     min_capacity = request.GET.get('min_capacity', '')
     search_query = request.GET.get('search', '')
@@ -132,6 +134,27 @@ def list_resources(request):
         'search_query':search_query,
     }
     return render(request, 'bookings/resource_list.html', context)
+    
+@login_required
+def toggle_resource_availability(request, pk):
+    """
+    Toggle functuonality for admin.
+    """
+    if not request.user.is_staff:
+        messages.error(request, MSG_ACCESS_RESTRICTED)
+        return redirect('list_resources')
+    try:
+        resource = Resource.objects.get(pk=pk)
+    except Resource.DoesNotExist:
+        messages.error(request, MSG_RESOURCE_NOT_FOUND)
+        return redirect('list_resources')
+    # Toggle availability
+    resource.is_available = not resource.is_available
+    resource.save()
+    status = "available" if resource.is_available else "unavailable"
+    messages.success(request, f'{resource.resource_name} marked as {status}.')
+    logger.info('Resource availability toggled by admin: %s', request.user.username)
+    return redirect('list_resources')    
 
 
 @login_required

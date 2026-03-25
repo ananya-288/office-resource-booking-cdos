@@ -17,6 +17,7 @@ urlpatterns = [
     path('resources/create/', views.resource_create,name='resource_create'),
     path('resources/<int:pk>/edit/',views.resource_edit, name='resource_edit'),
     path('resources/<int:pk>/delete/', views.resource_delete,name='resource_delete'),
+    path('resources/<int:pk>/toggle/', views.toggle_resource_availability, name='toggle_availability'),
 
     # Booking URLs
     path('resources/<int:pk>/book/', views.create_booking, name='create_booking'),

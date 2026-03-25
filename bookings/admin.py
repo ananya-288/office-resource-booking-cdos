@@ -11,7 +11,7 @@ class ResourceAdmin(admin.ModelAdmin):
     list_display = ['resource_name', 'resource_type','capacity', 'location','is_available']
     list_filter = ['resource_type', 'is_available']
     search_fields = ['resource_name','location']
-    sorting = ['resource_name']
+    ordering = ['resource_name']
 
 # Controls the way bookings are managed in admin panel
 @admin.register(Booking)
@@ -20,4 +20,4 @@ class BookingAdmin(admin.ModelAdmin):
     list_display = ['user', 'resource','start_time', 'end_time','status', 'created_at']
     list_filter = ['status', 'resource', 'created_at']
     search_fields = ['user__username','resource__resource_name']
-    sorting = ['-created_at']
+    ordering = ['-created_at']

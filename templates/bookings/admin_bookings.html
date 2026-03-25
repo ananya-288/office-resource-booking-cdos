@@ -50,7 +50,13 @@
         <tbody>
             {% for booking in all_bookings %}
             <tr>
-                <td>{{ booking.user.get_full_name }}</td>
+                <td>
+                    {% if booking.user.get_full_name %}
+                     {{ booking.user.get_full_name }}
+                    {% else %}
+                      {{ booking.user.username }}
+                   {% endif %}
+            </td>
                 <td>{{ booking.resource.resource_name }}</td>
                 <td>{{ booking.start_time }}</td>
                 <td>{{ booking.end_time }}</td>

@@ -60,9 +60,9 @@
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <span class="nav-link text-white">
                             <i class="fas fa-user"></i> {{ user.first_name }}
-                        </a>
+                        </span>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'logout_user' %}">

@@ -3,7 +3,7 @@
 
 {% block content %}
 <h2 class="page-heading">
-    <i class="fas fa-door-open"></i> Available Resources
+    <i class="fas fa-door-open"></i> Office Resources
 </h2>
 
 <!-- Search and Filter Form -->
@@ -12,7 +12,8 @@
         <div class="row g-3">
             <div class="col-md-4">
                 <label class="form-label" for="id_search">Search</label>
-                <input type="text" name="search" id="id_search" class="form-control"
+                <input type="text" name="search" id="id_search"
+                       class="form-control"
                        placeholder="Search by name"
                        value="{{ search_query }}">
             </div>
@@ -30,8 +31,10 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="id_min_capacity">Min Capacity</label>
-                <input type="number" name="min_capacity" id="id_min_capacity" class="form-control"
-                       placeholder="e.g. 5" value="{{ min_capacity }}" min="1">
+                <input type="number" name="min_capacity" id="id_min_capacity"
+                       class="form-control"
+                       placeholder="e.g. 5"
+                       value="{{ min_capacity }}" min="1">
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-orbs w-100">
@@ -60,7 +63,8 @@
                     {{ resource.resource_name }}
                 </h5>
                 <p class="card-text">
-                    <span class="badge" style="background-color: #f0a500; color: #1a3a5c;">
+                    <span class="badge"
+                          style="background-color: #f0a500; color: #1a3a5c;">
                         {{ resource.get_resource_type_display }}
                     </span>
                 </p>
@@ -72,6 +76,12 @@
                 </p>
                 {% if resource.description %}
                 <p class="card-text text-muted">{{ resource.description }}</p>
+                {% endif %}
+                <!-- Availability Status -->
+                {% if resource.is_available %}
+                <span class="badge bg-success">Available</span>
+                {% else %}
+                <span class="badge bg-danger">Unavailable</span>
                 {% endif %}
             </div>
             <div class="card-footer d-flex justify-content-between">
@@ -89,6 +99,14 @@
                        class="btn btn-outline-danger btn-sm">
                         <i class="fas fa-trash"></i>
                     </a>
+                    <a href="{% url 'toggle_availability' resource.pk %}"
+                       class="btn btn-outline-warning btn-sm">
+                        {% if resource.is_available %}
+                        <i class="fas fa-times"></i>
+                        {% else %}
+                        <i class="fas fa-check"></i>
+                        {% endif %}
+                    </a>
                 </div>
                 {% endif %}
             </div>
@@ -102,11 +120,11 @@
 </div>
 {% endif %}
 
-{% if user.is_staff %}
-<div class="mt-3">
-    <a href="{% url 'resource_create' %}" class="btn btn-orbs">
-        <i class="fas fa-plus"></i> Add New Resource
-    </a>
-</div>
+<!--{% if user.is_staff %}-->
+<!--<div class="mt-3">-->
+<!--    <a href="{% url 'resource_create' %}" class="btn btn-orbs">-->
+<!--        <i class="fas fa-plus"></i> Add New Resource-->
+<!--    </a>-->
+<!--</div>-->
 {% endif %}
 {% endblock %}

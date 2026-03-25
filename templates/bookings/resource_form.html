@@ -15,8 +15,8 @@
 
                 <!-- Resource Name -->
                 <div class="mb-3">
-                    <label class="form-label" for="id_resource_name>Resource Name</label>
-                    <input type="text" name="resource_name" id="id_resource_name class="form-control"
+                    <label class="form-label" for="id_resource_name">Resource Name</label>
+                    <input type="text" name="resource_name" id="id_resource_name" class="form-control"
                            placeholder="e.g. Conference Room A"
                            value="{{ form.resource_name.value|default:'' }}" required>
                     {% if form.resource_name.errors %}
@@ -77,7 +77,6 @@
                 <!-- Is Available -->
                 <div class="mb-3 form-check">
                     <input type="checkbox" name="is_available" id="id_is_available" class="form-check-input"
-                           id="is_available"
                            {% if form.is_available.value %}checked{% endif %}>
                     <label class="form-check-label" for="id_is_available">
                         Available for booking

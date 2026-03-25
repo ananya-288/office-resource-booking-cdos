@@ -27,12 +27,15 @@ class UserRegistrationForm(forms.Form):
     MSG_TOO_LONG = f"Must have atmost {MAX_LENGTH} characters."
     MSG_LETTERS_ONLY ="Only letters are accepted."
 
-    username =forms.CharField(
-        max_length=40,
-        validators=[
-            validators.MinLengthValidator(3, "Username must have at least 3 characters."),
-        ]
-    )
+    username = forms.CharField(
+    max_length=50,
+    validators=[
+        validators.RegexValidator(
+            r'^[a-zA-Z]\w{5,49}$',
+            "Username must be 6-50 characters, start with a letter, "
+            "and contain only letters, numbers and underscores."
+        )]
+)
     email = forms.EmailField(
         validators=[validators.validate_email]
     )
@@ -80,25 +83,19 @@ class UserRegistrationForm(forms.Form):
         """
         password = self.cleaned_data.get('password')
         if password:
-            if len(password) < 8:
+            special_characters = '!@#$%^&*()_+-=[]{}|;:,.<>?'
+            is_valid = (
+               len(password) >= 8
+               and any(char.isupper() for char in password)
+                and any(char.islower() for char in password)
+               and any(char.isdigit() for char in password)
+                and any(char in special_characters for char in password)
+        )
+            if not is_valid:
                 raise forms.ValidationError(
-                   "Password must be minimum 8 characters long."
-             )
-            if not any(char.isupper() for char in password):
-                raise forms.ValidationError(
-                  "Password must contain at least one uppercase letter.")
-            if not any(char.islower() for char in password):
-                raise forms.ValidationError(
-                "Password must contain at least one lowercase letter."
-             )
-            if not any(char.isdigit() for char in password):
-                raise forms.ValidationError(
-                "Password must contain at least one number."
-            )
-            if not any(char in '!@#$%^&*()_+-=[]{}|;:,.<>?' for char in password):
-                raise forms.ValidationError(
-                "Password must contain at least one special character."
-            )
+                "Password must be at least 8 characters long and contain "
+                "at least one uppercase letter, one lowercase letter, "
+                "one number and one special character.")
         return password
 
     def clean(self):
