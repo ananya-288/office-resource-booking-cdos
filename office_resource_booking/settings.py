@@ -20,15 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = 'SECRET_KEY=django-insecure-@&+e!@5x)y)2z*28b4@_waw#fzf^d3r&l6=j&@%mfz_=kubcyz'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = True
 
-ALLOWED_HOSTS = ['74f80196c5924a2e9b1a988368b655ff.vfs.cloud9.us-east-1.amazonaws.com',
-           'localhost',
-            '127.0.0.1',
-]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -128,9 +125,7 @@ STATIC_ROOT= BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://74f80196c5924a2e9b1a988368b655ff.vfs.cloud9.us-east-1.amazonaws.com',
-]
+CSRF_TRUSTED_ORIGINS = ['*']
 
 # Email configuration 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
