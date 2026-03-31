@@ -3,6 +3,7 @@ Django settings for office_resource_booking project.
 """
 from decouple import config
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -61,17 +62,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'office_resource_booking.wsgi.application'
 
-# Database - PostgreSQL on AWS RDS
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('RDS_DB_NAME', default='ebdb'),
-        'USER': config('RDS_USERNAME', default='orbsadmin'),
-        'PASSWORD': config('RDS_PASSWORD', default='Orbs1234'),
-        'HOST': config('RDS_HOSTNAME', default='orbs-db.cdzwxni29tce.us-east-1.rds.amazonaws.com'),
-        'PORT': config('RDS_PORT', default='5432'),
+# Use SQLite for testing, PostgreSQL for production
+if os.environ.get('TESTING') == 'True':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('RDS_DB_NAME', default='ebdb'),
+            'USER': config('RDS_USERNAME', default='orbsadmin'),
+            'PASSWORD': config('RDS_PASSWORD', default='Orbs1234'),
+            'HOST': config('RDS_HOSTNAME', default='orbs-db.cdzwxni29tce.us-east-1.rds.amazonaws.com'),
+            'PORT': config('RDS_PORT', default='5432'),
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
