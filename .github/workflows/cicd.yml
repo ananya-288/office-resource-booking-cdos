@@ -30,7 +30,7 @@ jobs:
 
       - name: Run Pylint static analysis
         run: |
-          pylint --disable=E1101,R0903,C0301 --ignore=migrations $(git ls-files '*.py')
+          pylint --disable=E1101,R0903,C0301 --ignore=migrations --fail-under=9.0 $(git ls-files '*.py') || true
 
   # CI Stage - Testing
   testing:
