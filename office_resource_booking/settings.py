@@ -73,11 +73,14 @@ WSGI_APPLICATION = 'office_resource_booking.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('RDS_DB_NAME', default='ebdb'),
+        'USER': config('RDS_USERNAME', default='orbsadmin'),
+        'PASSWORD': config('RDS_PASSWORD', default='Orbs1234'),
+        'HOST': config('RDS_HOSTNAME', default='orbs-db.cdzwxni29tce.us-east-1.rds.amazonaws.com'),
+        'PORT': config('RDS_PORT', default='5432'),
     }
 }
 
