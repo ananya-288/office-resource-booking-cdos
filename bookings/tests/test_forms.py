@@ -14,7 +14,7 @@ class TestRegistrationForm(TestCase):
             'email': 'test@test.com',
             'first_name': 'Test',
             'last_name': 'User',
-            'password': 'Test@1234',
+            'password': 'Test@1234',  # nosonar
             'confirm_password': 'Test@1234'
         })
         self.assertTrue(form.is_valid())
@@ -26,7 +26,7 @@ class TestRegistrationForm(TestCase):
             'email': 'test@test.com',
             'first_name': 'Test',
             'last_name': 'User',
-            'password': 'Test@1234',
+            'password': 'Test@1234', # nosonar
             'confirm_password': 'Different@1234'
         })
         self.assertFalse(form.is_valid())
@@ -38,7 +38,7 @@ class TestRegistrationForm(TestCase):
             'email': 'test@test.com',
             'first_name': 'Test',
             'last_name': 'User',
-            'password': 'weakpass',
+            'password': 'weakpass',  # nosonar
             'confirm_password': 'weakpass'
         })
         self.assertFalse(form.is_valid())
@@ -50,7 +50,7 @@ class TestRegistrationForm(TestCase):
             'email': '',
             'first_name': 'Test',
             'last_name': 'User',
-            'password': 'Test@1234',
+            'password': 'Test@1234',  # nosonar
             'confirm_password': 'Test@1234'
         })
         self.assertFalse(form.is_valid())
@@ -62,7 +62,7 @@ class TestRegistrationForm(TestCase):
             'email': 'notanemail',
             'first_name': 'Test',
             'last_name': 'User',
-            'password': 'Test@1234',
+            'password': 'Test@1234',   # nosonar
             'confirm_password': 'Test@1234'
         })
         self.assertFalse(form.is_valid())
@@ -76,7 +76,7 @@ class TestBookingForm(TestCase):
         from bookings.models import Resource
         self.user = User.objects.create_user(
             username='testuser',
-            password='Test@1234',
+            password='Test@1234',  # nosonar
             email='test@test.com'
         )
         self.resource = Resource.objects.create(
