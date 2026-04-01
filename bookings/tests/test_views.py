@@ -5,6 +5,9 @@ and actions in the application are working as expected.
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+from bookings.models import Resource, Booking
+from django.utils import timezone
+from datetime import timedelta
 
 TEST_USERNAME = 'testuser'
 TEST_PASS = 'Test@1234'  # nosonar
@@ -19,19 +22,26 @@ NEW_PASS = 'NewUser@1234'  # nosonar
 class TestViews(TestCase):
     """
     Testing the views of the application.
-    I created a test user in setUp so I can use it across all tests
-    without having to create one in each test method.
+    I created a test user and resource in setUp so I can reuse
+    them across all tests without repeating the same code.
     """
 
     def setUp(self):
-        """Create a test user and client before running each test."""
+        """Create a test user, client and resource before each test."""
         self.client = Client()
         self.user = User.objects.create_user(
             username=TEST_USERNAME,
-            password=TEST_PASS,
+            password=TEST_PASS,  # nosonar
             email=TEST_EMAIL,
             first_name=TEST_FIRST_NAME,
             last_name=TEST_LAST_NAME
+        )
+        self.resource = Resource.objects.create(
+            resource_name='Test Room',
+            resource_type='meeting_room',
+            capacity=10,
+            location='Floor 1',
+            is_available=True
         )
 
     def test_home_redirects_unauthenticated_user(self):
@@ -167,6 +177,14 @@ class TestViews(TestCase):
         response = self.client.get(reverse('display_bookings_admin'))
         self.assertEqual(response.status_code, 302)
 
+    def test_admin_bookings_accessible_for_admin(self):
+        """Check that admin can access the admin bookings page."""
+        self.user.is_staff = True
+        self.user.save()
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        response = self.client.get(reverse('display_bookings_admin'))
+        self.assertEqual(response.status_code, 200)
+
     def test_resource_create_redirects_non_admin(self):
         """Check that non admin users cannot create resources."""
         self.client.login(username=TEST_USERNAME, password=TEST_PASS)
@@ -181,128 +199,6 @@ class TestViews(TestCase):
         response = self.client.get(reverse('resource_create'))
         self.assertEqual(response.status_code, 200)
 
-    def test_make_booking_page_loads(self):
-        """Check that the make booking page loads for logged in users."""
-        from bookings.models import Resource
-        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        resource = Resource.objects.create(
-            resource_name='Test Room',
-            resource_type='meeting_room',
-            capacity=10,
-            location='Floor 1',
-            is_available=True
-        )
-        response = self.client.get(
-            reverse('create_booking', args=[resource.pk])
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_resource_detail_loads(self):
-        """Check that resource detail page loads correctly."""
-        from bookings.models import Resource
-        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        resource = Resource.objects.create(
-            resource_name='Test Room',
-            resource_type='meeting_room',
-            capacity=10,
-            location='Floor 1',
-            is_available=True
-        )
-        response = self.client.get(
-            reverse('resource_detail', args=[resource.pk])
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_resource_edit_accessible_for_admin(self):
-        """Check that admin can access resource edit page."""
-        from bookings.models import Resource
-        self.user.is_staff = True
-        self.user.save()
-        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        resource = Resource.objects.create(
-            resource_name='Test Room',
-            resource_type='meeting_room',
-            capacity=10,
-            location='Floor 1',
-            is_available=True
-        )
-        response = self.client.get(
-            reverse('resource_edit', args=[resource.pk])
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_resource_delete_accessible_for_admin(self):
-        """Check that admin can access resource delete page."""
-        from bookings.models import Resource
-        self.user.is_staff = True
-        self.user.save()
-        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        resource = Resource.objects.create(
-            resource_name='Test Room',
-            resource_type='meeting_room',
-            capacity=10,
-            location='Floor 1',
-            is_available=True
-        )
-        response = self.client.get(
-            reverse('resource_delete', args=[resource.pk])
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_update_booking_page_loads(self):
-        """Check that the update booking page loads for logged in users."""
-        from bookings.models import Resource, Booking
-        from django.utils import timezone
-        from datetime import timedelta
-        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        resource = Resource.objects.create(
-            resource_name='Test Room',
-            resource_type='meeting_room',
-            capacity=10,
-            location='Floor 1',
-            is_available=True
-        )
-        start_time = timezone.now() + timedelta(days=1)
-        end_time = start_time + timedelta(hours=2)
-        booking = Booking.objects.create(
-            user=self.user,
-            resource=resource,
-            start_time=start_time,
-            end_time=end_time,
-            status='confirmed'
-        )
-        response = self.client.get(
-            reverse('update_booking', args=[booking.pk])
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_cancel_booking_page_loads(self):
-        """Check that the cancel booking page loads for logged in users."""
-        from bookings.models import Resource, Booking
-        from django.utils import timezone
-        from datetime import timedelta
-        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        resource = Resource.objects.create(
-            resource_name='Test Room',
-            resource_type='meeting_room',
-            capacity=10,
-            location='Floor 1',
-            is_available=True
-        )
-        start_time = timezone.now() + timedelta(days=1)
-        end_time = start_time + timedelta(hours=2)
-        booking = Booking.objects.create(
-            user=self.user,
-            resource=resource,
-            start_time=start_time,
-            end_time=end_time,
-            status='confirmed'
-        )
-        response = self.client.get(
-            reverse('cancel_my_booking', args=[booking.pk])
-        )
-        self.assertEqual(response.status_code, 200)
-    
     def test_resource_create_post_by_admin(self):
         """Check that admin can create a resource via POST."""
         self.user.is_staff = True
@@ -318,24 +214,94 @@ class TestViews(TestCase):
         })
         self.assertEqual(response.status_code, 302)
 
-    def test_cancel_booking_post(self):
-        """Check that user can cancel their booking via POST."""
-        from bookings.models import Resource, Booking
-        from django.utils import timezone
-        from datetime import timedelta
+    def test_make_booking_page_loads(self):
+        """Check that the make booking page loads for logged in users."""
         self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        resource = Resource.objects.create(
-            resource_name='Test Room',
-            resource_type='meeting_room',
-            capacity=10,
-            location='Floor 1',
-            is_available=True
+        response = self.client.get(
+            reverse('create_booking', args=[self.resource.pk])
         )
+        self.assertEqual(response.status_code, 200)
+
+    def test_resource_detail_loads(self):
+        """Check that resource detail page loads correctly."""
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        response = self.client.get(
+            reverse('resource_detail', args=[self.resource.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_resource_edit_accessible_for_admin(self):
+        """Check that admin can access resource edit page."""
+        self.user.is_staff = True
+        self.user.save()
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        response = self.client.get(
+            reverse('resource_edit', args=[self.resource.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_resource_delete_accessible_for_admin(self):
+        """Check that admin can access resource delete page."""
+        self.user.is_staff = True
+        self.user.save()
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        response = self.client.get(
+            reverse('resource_delete', args=[self.resource.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_resource_delete_post_by_admin(self):
+        """Check that admin can delete a resource via POST."""
+        self.user.is_staff = True
+        self.user.save()
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        response = self.client.post(
+            reverse('resource_delete', args=[self.resource.pk])
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_update_booking_page_loads(self):
+        """Check that the update booking page loads for logged in users."""
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
         start_time = timezone.now() + timedelta(days=1)
         end_time = start_time + timedelta(hours=2)
         booking = Booking.objects.create(
             user=self.user,
-            resource=resource,
+            resource=self.resource,
+            start_time=start_time,
+            end_time=end_time,
+            status='confirmed'
+        )
+        response = self.client.get(
+            reverse('update_booking', args=[booking.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_cancel_booking_page_loads(self):
+        """Check that the cancel booking page loads for logged in users."""
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        start_time = timezone.now() + timedelta(days=1)
+        end_time = start_time + timedelta(hours=2)
+        booking = Booking.objects.create(
+            user=self.user,
+            resource=self.resource,
+            start_time=start_time,
+            end_time=end_time,
+            status='confirmed'
+        )
+        response = self.client.get(
+            reverse('cancel_my_booking', args=[booking.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_cancel_booking_post(self):
+        """Check that user can cancel their booking via POST."""
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        start_time = timezone.now() + timedelta(days=1)
+        end_time = start_time + timedelta(hours=2)
+        booking = Booking.objects.create(
+            user=self.user,
+            resource=self.resource,
             start_time=start_time,
             end_time=end_time,
             status='confirmed'
@@ -343,30 +309,4 @@ class TestViews(TestCase):
         response = self.client.post(
             reverse('cancel_my_booking', args=[booking.pk])
         )
-        self.assertEqual(response.status_code, 302)   
-        
-    def test_resource_delete_post_by_admin(self):
-        """Check that admin can delete a resource via POST."""
-        from bookings.models import Resource
-        self.user.is_staff = True
-        self.user.save()
-        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        resource = Resource.objects.create(
-            resource_name='Test Room',
-            resource_type='meeting_room',
-            capacity=10,
-            location='Floor 1',
-            is_available=True
-        )
-        response = self.client.post(
-            reverse('resource_delete', args=[resource.pk])
-        )
         self.assertEqual(response.status_code, 302)
-
-    def test_admin_bookings_accessible_for_admin(self):
-        """Check that admin can access the admin bookings page."""
-        self.user.is_staff = True
-        self.user.save()
-        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
-        response = self.client.get(reverse('display_bookings_admin'))
-        self.assertEqual(response.status_code, 200)    
