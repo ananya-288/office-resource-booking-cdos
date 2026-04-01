@@ -215,3 +215,5 @@ logs/*.log
 # Elastic Beanstalk Files
 .elasticbeanstalk/
 
+
+staticfiles/
