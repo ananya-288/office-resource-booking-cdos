@@ -310,3 +310,44 @@ class TestViews(TestCase):
             reverse('cancel_my_booking', args=[booking.pk])
         )
         self.assertEqual(response.status_code, 302)
+        
+    def test_toggle_availability_by_admin(self):
+        """Check that admin can toggle resource availability."""
+        self.user.is_staff = True
+        self.user.save()
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        response = self.client.get(
+            reverse('toggle_availability', args=[self.resource.pk])
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_toggle_availability_redirects_non_admin(self):
+        """Check that non admin cannot toggle resource availability."""
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        response = self.client.get(
+            reverse('toggle_availability', args=[self.resource.pk])
+        )
+        self.assertEqual(response.status_code, 302)
+        
+    def test_update_booking_post(self):
+        """Check that user can update their booking via POST."""
+        self.client.login(username=TEST_USERNAME, password=TEST_PASS)
+        start_time = timezone.now() + timedelta(days=1)
+        end_time = start_time + timedelta(hours=2)
+        booking = Booking.objects.create(
+            user=self.user,
+            resource=self.resource,
+            start_time=start_time,
+            end_time=end_time,
+            status='confirmed'
+        )
+        new_end_time = start_time + timedelta(hours=3)
+        response = self.client.post(
+            reverse('update_booking', args=[booking.pk]), {
+                'resource': self.resource.pk,
+                'start_time': start_time.strftime('%Y-%m-%dT%H:%M'),
+                'end_time': new_end_time.strftime('%Y-%m-%dT%H:%M'),
+                'notes': 'Updated booking'
+            }
+        )
+        self.assertEqual(response.status_code, 302)
