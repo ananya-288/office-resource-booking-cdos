@@ -93,7 +93,8 @@ jobs:
             -Dsonar.python.version=3.9
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.sources=bookings,office_resource_booking
-
+            -Dsonar.qualitygate.wait=true
+            
   # CD Stage - Deploy to Elastic Beanstalk
   deploy:
     runs-on: ubuntu-latest

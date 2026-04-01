@@ -1,0 +1,9 @@
+[run]
+source = bookings
+omit =
+    */migrations/*
+    */tests/*
+    manage.py
+    office_resource_booking/wsgi.py
+    office_resource_booking/asgi.py
+    office_resource_booking/settings.py
