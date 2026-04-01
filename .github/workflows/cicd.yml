@@ -57,7 +57,7 @@ jobs:
           DEBUG: "True"
           TESTING: "True"
         run: |
-          pytest --cov=bookings --cov-report=xml --tb=short
+          pytest --cov=bookings --cov-report=xml:coverage.xml --tb=short
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -89,9 +89,10 @@ jobs:
           args: >
             -Dsonar.projectKey=ananya-288_office-resource-booking-cdos
             -Dsonar.organization=ananya-288
-            -Dsonar.exclusions=staticfiles/**,**/migrations/**
+            -Dsonar.exclusions=staticfiles/**,**/migrations/**,templates/**,static/**,manage.py
             -Dsonar.python.version=3.9
             -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.sources=bookings,office_resource_booking
 
   # CD Stage - Deploy to Elastic Beanstalk
   deploy:
