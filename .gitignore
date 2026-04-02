@@ -216,4 +216,3 @@ logs/*.log
 .elasticbeanstalk/
 
 
-staticfiles/
